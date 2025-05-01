@@ -1,5 +1,6 @@
 import * as https from "https";
 import { PluginSettings } from "../../main";
+import { HARDCOVER_API } from "src/config";
 
 export class HardcoverAPI {
 	private settings: PluginSettings;
@@ -70,8 +71,8 @@ export class HardcoverAPI {
 		});
 
 		const options = {
-			hostname: "api.hardcover.app",
-			path: "/v1/graphql",
+			hostname: HARDCOVER_API.GRAPHQL_URL,
+			path: HARDCOVER_API.GRAPHQL_PATH,
 			method: "POST",
 			headers: {
 				Authorization: `${this.settings.apiKey}`,
