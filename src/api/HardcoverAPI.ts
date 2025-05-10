@@ -90,7 +90,7 @@ export class HardcoverAPI {
 		return response.data;
 	}
 
-	async fetchData(): Promise<any[]> {
+	async fetchLibrary(): Promise<any[]> {
 		const query = `
             query Test {
 				me {
