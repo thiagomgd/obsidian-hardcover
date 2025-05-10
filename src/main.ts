@@ -4,10 +4,12 @@ import SettingsTab from "./views/SettingsTab";
 
 export interface PluginSettings {
 	apiKey: string;
+	lastSyncTimestamp: string;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	apiKey: "",
+	lastSyncTimestamp: "",
 };
 
 export default class ObsidianHardcover extends Plugin {
