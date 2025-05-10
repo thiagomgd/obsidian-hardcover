@@ -1,41 +1,47 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { HardcoverAPI } from "src/api/HardcoverAPI";
 import SettingsTab from "./views/SettingsTab";
+import { SyncService } from "./services/SyncService";
 
 export interface PluginSettings {
 	apiKey: string;
 	lastSyncTimestamp: string;
+	userId: string;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	apiKey: "",
 	lastSyncTimestamp: "",
+	userId: "",
 };
 
 export default class ObsidianHardcover extends Plugin {
 	settings: PluginSettings;
+	syncService: SyncService;
 	hardcoverAPI: HardcoverAPI;
 
 	async onload() {
 		await this.loadSettings();
 
+		// Init Hardcover API service with settings
+		this.hardcoverAPI = new HardcoverAPI(this.settings);
+		// Instantiate main service
+		this.syncService = new SyncService(this);
+
 		// Add a settings tab to configure the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
 
-		// Init Hardcover API service with settings
-		this.hardcoverAPI = new HardcoverAPI(this.settings);
-
-		this.addCommand({
-			id: "fetch-library",
-			name: "Fetch Library",
-			callback: async () => {
-				try {
-					const data = await this.hardcoverAPI.fetchLibrary();
-				} catch (error) {
-					console.error("Error in API request:", error);
-				}
-			},
-		});
+		// this.addCommand({
+		// 	id: "fetch-library",
+		// 	name: "Fetch Library",
+		// 	callback: async () => {
+		// 		try {
+		// 			const data = await this.hardcoverAPI.fetchLibrary();
+		// 		} catch (error) {
+		// 			console.error("Error in API request:", error);
+		// 		}
+		// 	},
+		// });
 	}
 
 	onunload() {}

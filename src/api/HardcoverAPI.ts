@@ -103,4 +103,17 @@ export class HardcoverAPI {
 		console.log("-->", { data });
 		return data.items;
 	}
+
+	async fetchUserId(): Promise<any[]> {
+		const query = `
+			query GetUserId {
+				me {
+					id
+				}
+			}
+		`;
+
+		const data = await this.graphqlRequest(query);
+		return data.me;
+	}
 }
