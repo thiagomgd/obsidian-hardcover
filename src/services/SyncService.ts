@@ -12,15 +12,18 @@ export class SyncService {
 
 	async startSync() {
 		if (this.plugin.settings.userId) {
-			console.log("user id exists");
 		} else {
-			console.log(" user id does not exist");
-			const user = await this.hardcoverAPI.fetchUserId();
-			const userId = user[0]?.id;
-			// TODO: gracefully handle missing user id
-			if (userId) {
-				this.plugin.settings.userId = userId;
-				await this.plugin.saveSettings();
+			try {
+				const user = await this.hardcoverAPI.fetchUserId();
+
+				if (user?.id) {
+					this.plugin.settings.userId = String(user.id);
+					await this.plugin.saveSettings();
+				} else {
+					console.error("No user ID found in response");
+				}
+			} catch (error) {
+				console.error("Error fetching user ID:", error);
 			}
 		}
 	}

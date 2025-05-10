@@ -1,13 +1,8 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { HardcoverAPI } from "src/api/HardcoverAPI";
 import SettingsTab from "./views/SettingsTab";
+import { PluginSettings } from "./types";
 import { SyncService } from "./services/SyncService";
-
-export interface PluginSettings {
-	apiKey: string;
-	lastSyncTimestamp: string;
-	userId: string;
-}
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	apiKey: "",

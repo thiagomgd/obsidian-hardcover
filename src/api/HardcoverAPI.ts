@@ -1,6 +1,7 @@
 import * as https from "https";
-import { PluginSettings } from "../../main";
+import { PluginSettings } from "../types";
 import { HARDCOVER_API } from "src/config";
+import { GetUserIdResponse, GraphQLResponse, HardcoverUser } from "src/types";
 
 export class HardcoverAPI {
 	private settings: PluginSettings;
@@ -64,7 +65,7 @@ export class HardcoverAPI {
 		});
 	}
 
-	async graphqlRequest(query: string, variables?: any): Promise<any> {
+	async graphqlRequest<T>(query: string, variables?: any): Promise<any> {
 		const data = JSON.stringify({
 			query,
 			variables,
@@ -81,7 +82,10 @@ export class HardcoverAPI {
 			},
 		};
 
-		const response = await this.makeRequest(options, data);
+		const response: GraphQLResponse<T> = await this.makeRequest(
+			options,
+			data
+		);
 
 		if (response.errors && response.errors.length > 0) {
 			throw new Error(`GraphQL Error: ${response.errors[0].message}`);
@@ -90,6 +94,7 @@ export class HardcoverAPI {
 		return response.data;
 	}
 
+	// TODO: implement correct type
 	async fetchLibrary(): Promise<any[]> {
 		const query = `
             query Test {
@@ -100,11 +105,10 @@ export class HardcoverAPI {
         `;
 
 		const data = await this.graphqlRequest(query);
-		console.log("-->", { data });
 		return data.items;
 	}
 
-	async fetchUserId(): Promise<any[]> {
+	async fetchUserId(): Promise<HardcoverUser | undefined> {
 		const query = `
 			query GetUserId {
 				me {
@@ -113,7 +117,7 @@ export class HardcoverAPI {
 			}
 		`;
 
-		const data = await this.graphqlRequest(query);
-		return data.me;
+		const data = await this.graphqlRequest<GetUserIdResponse>(query);
+		return data.me[0];
 	}
 }
