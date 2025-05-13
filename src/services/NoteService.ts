@@ -20,10 +20,18 @@ export class NoteService {
 			// TODO: create full note content
 			const noteContent = `---\n${frontmatter}\n---\n\n# ${title}\n`;
 
-			// Create the file in Obsidian
-			const file = await this.vault.create(filename, noteContent);
+			let file;
+			if (await this.vault.adapter.exists(filename)) {
+				// if file exists, write to it and then get the file reference
+				await this.vault.adapter.write(filename, noteContent);
+				file = this.vault.getAbstractFileByPath(filename) as TFile;
+				console.log(`Updated note: ${filename}`);
+			} else {
+				// create new file
+				file = await this.vault.create(filename, noteContent);
+				console.log(`Created note: ${filename}`);
+			}
 
-			console.log(`Created note: ${filename}`);
 			return file;
 		} catch (error) {
 			console.error("Error creating note:", error);
