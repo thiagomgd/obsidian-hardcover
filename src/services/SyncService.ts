@@ -1,3 +1,4 @@
+import { Notice } from "obsidian";
 import { HardcoverAPI } from "src/api/HardcoverAPI";
 import ObsidianHardcover from "src/main";
 
@@ -11,9 +12,19 @@ export class SyncService {
 	}
 
 	async getBooks(userId: number, totalBooks: number) {
-		try {
-			console.log("Starting book sync...");
+		const notice = new Notice("Syncing Hardcover library...", 0);
 
+		try {
+			const totalTasks = totalBooks * 2; // each book counts twice: one for fetch, one for the note creation
+			let completedTasks = 0;
+
+			const updateProgress = (message: string) => {
+				const percentage = Math.round((completedTasks / totalTasks) * 100);
+				notice.setMessage(`${message} (${percentage})%`);
+			};
+
+			// Task 1: fetch data from API
+			updateProgress("Fetching books");
 			// DEBUG method
 			const books = await this.hardcoverAPI.fetchLibraryPage({
 				userId,
@@ -25,16 +36,30 @@ export class SyncService {
 			// 	userId,
 			// 	totalBooks,
 			// 	onProgress(current, total) {
-			// 		console.log(`Progress: ${current}/${total} books`);
+			// 		completedTasks = current;
+			// 		updateProgress("Fetching books");
 			// 	},
 			// });
 
-			console.log(`Sync complete. Fetched ${books.length} books`);
-			console.log({ books });
+			// Fetch complete
+			completedTasks = totalBooks;
 
-			// TODO: Process books here
+			// Task 2: create notes
+			for (let i = 0; i < books.length; i++) {
+				updateProgress("Creating notes");
+				const book = books[i];
+				console.log("Creating note for: ", book.book_id);
+				completedTasks = totalBooks + (i + 1);
+			}
+
+			notice.hide();
+			new Notice("Hardcover library sync complete!");
+
+			// console.log({ books });
 		} catch (error) {
-			console.error("Error fetching library: ", error);
+			notice.hide();
+			console.error("Error syncing library:", error);
+			new Notice("Error syncing Hardcover library. Check console for details.");
 		}
 	}
 
