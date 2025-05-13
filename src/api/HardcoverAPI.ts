@@ -107,16 +107,24 @@ export class HardcoverAPI {
 		let currentOffset = 0;
 
 		while (currentOffset < totalBooks) {
+			// calculate the actual limit for this page (could be less than pageSize for the last page)
+			const limit = Math.min(pageSize, totalBooks - currentOffset);
+
 			// Fetch page
 			const booksPage = await this.fetchLibraryPage({
 				userId,
 				offset: currentOffset,
-				limit: pageSize,
+				limit,
 			});
 			allBooks.push(...booksPage);
 
+			// if less books than requested or reached the total, exit
+			if (booksPage.length < limit || allBooks.length >= totalBooks) {
+				break;
+			}
+
 			// Update offset for next page
-			currentOffset += pageSize;
+			currentOffset += booksPage.length;
 
 			// Report progress
 			if (onProgress) {
@@ -125,7 +133,7 @@ export class HardcoverAPI {
 			}
 		}
 
-		return allBooks;
+		return allBooks.slice(0, totalBooks);
 	}
 
 	async fetchLibraryPage({
