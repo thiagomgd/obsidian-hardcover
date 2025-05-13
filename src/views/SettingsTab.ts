@@ -41,9 +41,7 @@ export default class SettingsTab extends PluginSettingTab {
 
 		if (this.plugin.settings.userId) {
 			userIdSetting.addText((text) =>
-				text
-					.setValue(String(this.plugin.settings.userId))
-					.setDisabled(true)
+				text.setValue(String(this.plugin.settings.userId)).setDisabled(true)
 			);
 		} else {
 			userIdSetting.addText((text) =>
@@ -55,15 +53,11 @@ export default class SettingsTab extends PluginSettingTab {
 	private renderBooksCountSetting(containerEl: HTMLElement) {
 		const userIdSetting = new Setting(containerEl)
 			.setName("Hardcover Books Count")
-			.setDesc(
-				"Your total count of books on Hardcover - used for pagination"
-			);
+			.setDesc("Your total count of books on Hardcover - used for pagination");
 
 		if (this.plugin.settings.booksCount) {
 			userIdSetting.addText((text) =>
-				text
-					.setValue(String(this.plugin.settings.booksCount))
-					.setDisabled(true)
+				text.setValue(String(this.plugin.settings.booksCount)).setDisabled(true)
 			);
 		} else {
 			userIdSetting.addText((text) =>
@@ -123,28 +117,12 @@ export default class SettingsTab extends PluginSettingTab {
 				button.onClick(async () => {
 					this.plugin.settings.userId = null;
 					await this.plugin.saveSettings();
+					// Refresh to show changes
+					this.display();
 				});
 				button.setCta();
 			});
 	}
-
-	// private renderClearFieldsSettings(containerEl: HTMLElement) {
-	// 	new Setting(containerEl)
-	// 		.setName("DEBUG: clear fields settings")
-	// 		.addButton((button: ButtonComponent) => {
-	// 			button.setButtonText("Clear feilds");
-	// 			button.onClick(async () => {
-	// 				this.plugin.settings.dataSourcePreferences = {
-	// 					titleSource: "edition",
-	// 					coverSource: "edition",
-	// 					releaseDateSource: "edition",
-	// 				};
-
-	// 				await this.plugin.saveSettings();
-	// 			});
-	// 			button.setCta();
-	// 		});
-	// }
 
 	private renderFieldSettings(containerEl: HTMLElement) {
 		containerEl.createEl("h2", { text: "Configuration" });
@@ -171,8 +149,7 @@ export default class SettingsTab extends PluginSettingTab {
 			{
 				key: "contributors",
 				name: "Contributors",
-				description:
-					"Other contributors (translators, narrators, etc.)",
+				description: "Other contributors (translators, narrators, etc.)",
 			},
 			{
 				key: "releaseDate",
@@ -199,8 +176,7 @@ export default class SettingsTab extends PluginSettingTab {
 			{
 				key: "firstRead",
 				name: "First Read",
-				description:
-					"Creates firstReadStart and firstReadEnd properties",
+				description: "Creates firstReadStart and firstReadEnd properties",
 			},
 			{
 				key: "lastRead",
@@ -214,52 +190,54 @@ export default class SettingsTab extends PluginSettingTab {
 			},
 		];
 
-		// Render each field
-		fields.forEach((field) => {
-			this.renderFieldSetting(containerEl, field);
+		// create field groups div for better spacing
+		const fieldGroupsContainer = containerEl.createDiv({
+			cls: "field-groups-container",
+		});
+
+		fields.forEach((field, index) => {
+			const fieldGroup = fieldGroupsContainer.createDiv({ cls: "field-group" });
+			this.renderFieldSetting(fieldGroup, field);
+
+			// add divider after each field except the last one
+			if (index < fields.length - 1) {
+				fieldGroupsContainer.createEl("hr", { cls: "field-separator" });
+			}
 		});
 	}
 
-	private renderFieldSetting(
-		containerEl: HTMLElement,
-		field: FieldDefinition
-	) {
-		console.log(this.plugin.settings);
-
-		return;
-
+	private renderFieldSetting(containerEl: HTMLElement, field: FieldDefinition) {
 		const fieldSettings = this.plugin.settings.fieldsSettings[field.key];
 
-		new Setting(containerEl)
+		// Create a container for the main toggle
+		const mainSetting = new Setting(containerEl)
 			.setName(field.name)
 			.setDesc(field.description)
 			.addToggle((toggle) =>
-				toggle
-					.setValue(fieldSettings.enabled)
-					.onChange(async (value) => {
-						this.plugin.settings.fieldsSettings[field.key].enabled =
-							value;
-						await this.plugin.saveSettings();
-						// Refresh to show/hide property name field
-						this.display();
-						console.log({ settings: this.plugin.settings });
-					})
+				toggle.setValue(fieldSettings.enabled).onChange(async (value) => {
+					this.plugin.settings.fieldsSettings[field.key].enabled = value;
+					await this.plugin.saveSettings();
+					// Refresh to show/hide property name field
+					this.display();
+				})
 			);
 
+		// only show additional settings if the field is enabled
 		if (fieldSettings.enabled) {
-			new Setting(containerEl)
+			const additionalSettingsContainer = containerEl.createDiv({
+				cls: "nested-settings",
+			});
+
+			new Setting(additionalSettingsContainer)
 				.setName("Property name")
-				.setDesc(
-					`Frontmatter property name for ${field.name.toLowerCase()}`
-				)
+				.setDesc(`Frontmatter property name for ${field.name.toLowerCase()}`)
 				.addText((text) =>
 					text
 						.setPlaceholder(field.key)
 						.setValue(fieldSettings.propertyName)
 						.onChange(async (value) => {
-							this.plugin.settings.fieldsSettings[
-								field.key
-							].propertyName = value || field.key;
+							this.plugin.settings.fieldsSettings[field.key].propertyName =
+								value || field.key;
 							await this.plugin.saveSettings();
 						})
 				);
@@ -270,9 +248,7 @@ export default class SettingsTab extends PluginSettingTab {
 				const currentSource =
 					this.plugin.settings.dataSourcePreferences[sourceKey];
 
-				console.log({ sourceKey, currentSource });
-
-				new Setting(containerEl)
+				new Setting(additionalSettingsContainer)
 					.setName("Get from book")
 					.setDesc(
 						`By default all data will be retrieved from Editions. Turn this on to get the ${field.name} from the Book instead.`
@@ -281,28 +257,20 @@ export default class SettingsTab extends PluginSettingTab {
 						toggle
 							.setValue(currentSource === "book")
 							.onChange(async (value) => {
-								this.plugin.settings.dataSourcePreferences[
-									sourceKey
-								] = value ? "book" : "edition";
+								this.plugin.settings.dataSourcePreferences[sourceKey] = value
+									? "book"
+									: "edition";
 								await this.plugin.saveSettings();
 							})
 							.setDisabled(
-								!this.plugin.settings.fieldsSettings[field.key]
-									.enabled
+								!this.plugin.settings.fieldsSettings[field.key].enabled
 							)
 							.setTooltip(
-								`Use ${
-									currentSource === "book"
-										? "book"
-										: "edition"
-								} as source`
+								`Use ${currentSource === "book" ? "book" : "edition"} as source`
 							);
 					});
 			}
 		}
-
-		// Add some visual separation after the property settings
-		containerEl.createEl("hr", { cls: "field-separator" });
 	}
 
 	display(): void {
@@ -319,8 +287,8 @@ export default class SettingsTab extends PluginSettingTab {
 		this.renderUserIdSetting(containerEl);
 		this.renderBooksCountSetting(containerEl);
 		this.renderClearId(containerEl);
-		// this.renderClearFieldsSettings(containerEl);
 
+		// Field settings
 		this.renderFieldSettings(containerEl);
 	}
 }
