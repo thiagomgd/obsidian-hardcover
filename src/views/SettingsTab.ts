@@ -129,6 +129,7 @@ export default class SettingsTab extends PluginSettingTab {
 		containerEl.createEl("p", {
 			text: "Decide what data you want to retrieve from Hardcover to populate the frontmatter properties of your notes.",
 		});
+		containerEl.createEl("hr", { cls: "field-separator" });
 
 		const fields: FieldDefinition[] = [
 			{
@@ -212,8 +213,10 @@ export default class SettingsTab extends PluginSettingTab {
 		// Create a container for the main toggle
 		const mainSetting = new Setting(containerEl)
 			.setName(field.name)
-			.setDesc(field.description)
-			.addToggle((toggle) =>
+			.setDesc(field.description);
+
+		if (mainSetting.nameEl.textContent !== "Title") {
+			mainSetting.addToggle((toggle) =>
 				toggle.setValue(fieldSettings.enabled).onChange(async (value) => {
 					this.plugin.settings.fieldsSettings[field.key].enabled = value;
 					await this.plugin.saveSettings();
@@ -221,6 +224,7 @@ export default class SettingsTab extends PluginSettingTab {
 					this.display();
 				})
 			);
+		}
 
 		// only show additional settings if the field is enabled
 		if (fieldSettings.enabled) {

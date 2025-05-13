@@ -14,13 +14,20 @@ export class SyncService {
 		try {
 			console.log("Starting book sync...");
 
-			const books = await this.hardcoverAPI.fetchEntireLibrary({
+			// DEBUG method
+			const books = await this.hardcoverAPI.fetchLibraryPage({
 				userId,
-				totalBooks,
-				onProgress(current, total) {
-					console.log(`Progress: ${current}/${total} books`);
-				},
+				offset: 0,
+				limit: 1,
 			});
+
+			// const books = await this.hardcoverAPI.fetchEntireLibrary({
+			// 	userId,
+			// 	totalBooks,
+			// 	onProgress(current, total) {
+			// 		console.log(`Progress: ${current}/${total} books`);
+			// 	},
+			// });
 
 			console.log(`Sync complete. Fetched ${books.length} books`);
 			console.log({ books });

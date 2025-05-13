@@ -80,5 +80,6 @@ export default class ObsidianHardcover extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+		this.hardcoverAPI.rebuildQuery(this.settings);
 	}
 }
