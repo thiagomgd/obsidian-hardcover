@@ -68,6 +68,8 @@ export class HardcoverAPI {
 	}
 
 	async graphqlRequest<T>(query: string, variables?: any): Promise<any> {
+		// console.log(query);
+
 		const data = JSON.stringify({
 			query,
 			variables,

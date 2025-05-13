@@ -90,11 +90,6 @@ export class QueryBuilder {
 	): string {
 		const fields: string[] = ["title"]; // always include at least one field to avoid empty selection in the query
 
-		// title from edition level (if preferred)
-		if (settings.title.enabled && dataPrefs.titleSource === "edition") {
-			fields.push("title");
-		}
-
 		// release date from edition level (if preferred)
 		if (
 			settings.releaseDate.enabled &&
@@ -108,7 +103,7 @@ export class QueryBuilder {
 			fields.push("cached_image");
 		}
 
-		if (settings.contributors.enabled) {
+		if (settings.authors.enabled || settings.contributors.enabled) {
 			fields.push("cached_contributors");
 		}
 

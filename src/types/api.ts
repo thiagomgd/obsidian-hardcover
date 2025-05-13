@@ -46,7 +46,7 @@ interface HardcoverEdition {
 	title: string;
 	release_date: string;
 	cached_image: Record<string, any>;
-	cached_contributors: Record<string, any>;
+	cached_contributors: Record<string, any>[];
 	publisher: {
 		name: string;
 	};
