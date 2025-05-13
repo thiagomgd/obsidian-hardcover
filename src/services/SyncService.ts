@@ -11,7 +11,11 @@ export class SyncService {
 		this.hardcoverAPI = plugin.hardcoverAPI;
 	}
 
-	async getBooks(userId: number, totalBooks: number) {
+	async getBooks(
+		userId: number,
+		totalBooks: number,
+		debugMode: boolean = false
+	) {
 		const { metadataService, noteService } = this.plugin;
 
 		const notice = new Notice("Syncing Hardcover library...", 0);
@@ -22,26 +26,20 @@ export class SyncService {
 
 			const updateProgress = (message: string) => {
 				const percentage = Math.round((completedTasks / totalTasks) * 100);
-				notice.setMessage(`${message} (${percentage})%`);
+				notice.setMessage(`${message} (${percentage}%)`);
 			};
 
 			// Task 1: fetch data from API
 			updateProgress("Fetching books");
-			// DEBUG method
-			const books = await this.hardcoverAPI.fetchLibraryPage({
-				userId,
-				offset: 0,
-				limit: 1,
-			});
 
-			// const books = await this.hardcoverAPI.fetchEntireLibrary({
-			// 	userId,
-			// 	totalBooks,
-			// 	onProgress(current, total) {
-			// 		completedTasks = current;
-			// 		updateProgress("Fetching books");
-			// 	},
-			// });
+			const books = await this.hardcoverAPI.fetchEntireLibrary({
+				userId,
+				totalBooks,
+				onProgress(current, total) {
+					completedTasks = current;
+					updateProgress("Fetching books");
+				},
+			});
 
 			// Fetch complete
 			completedTasks = totalBooks;
@@ -56,9 +54,14 @@ export class SyncService {
 			}
 
 			notice.hide();
-			new Notice("Hardcover library sync complete!");
 
-			// console.log({ books });
+			if (debugMode) {
+				new Notice(
+					`DEBUG: Hardcover library sync complete with ${totalBooks} books!`
+				);
+			} else {
+				new Notice("Hardcover library sync complete!");
+			}
 		} catch (error) {
 			notice.hide();
 			console.error("Error syncing library:", error);
@@ -66,12 +69,25 @@ export class SyncService {
 		}
 	}
 
-	async startSync() {
+	async startSync(options: { debugLimit?: number } = {}) {
 		const storedUserId = this.plugin.settings.userId;
 		const storedBooksCount = this.plugin.settings.booksCount;
+		const isDebugMode = options.debugLimit !== undefined;
 
 		if (storedUserId && storedBooksCount) {
-			this.getBooks(storedUserId, storedBooksCount);
+			// if in debug mode, use the limited count, otherwise use the full count
+			const booksToProcess = isDebugMode
+				? Math.min(options.debugLimit!, storedBooksCount)
+				: storedBooksCount;
+
+			if (isDebugMode) {
+				console.log(
+					`Debug sync: Processing ${booksToProcess}/${storedBooksCount} books`
+				);
+				new Notice(`DEBUG MODE: Sync limited to ${booksToProcess} books`);
+			}
+
+			await this.getBooks(storedUserId, booksToProcess);
 		} else {
 			try {
 				const user = await this.hardcoverAPI.fetchUserId();
@@ -81,18 +97,33 @@ export class SyncService {
 
 					const booksCount = await this.hardcoverAPI.fetchBooksCount(user.id);
 
+					// if in debug mode, limit the books to process
+					const booksToProcess = isDebugMode
+						? Math.min(options.debugLimit!, booksCount)
+						: booksCount;
+
+					// store the actual books count regardless of debug mode
 					this.plugin.settings.userId = user.id;
 					this.plugin.settings.booksCount = booksCount;
 					await this.plugin.saveSettings();
 
-					if (booksCount) {
-						this.getBooks(user.id, booksCount);
+					if (isDebugMode) {
+						console.log(
+							`Debug sync: Processing ${booksToProcess}/${booksCount} books`
+						);
+						new Notice(`DEBUG MODE: Sync limited to ${booksToProcess} books`);
+					}
+
+					if (booksToProcess > 0) {
+						await this.getBooks(user.id, booksToProcess);
 					}
 				} else {
 					console.error("No user ID found in response");
+					new Notice("Error: No user ID found");
 				}
 			} catch (error) {
 				console.error("Error fetching user ID: ", error);
+				new Notice("Error fetching user ID. Check console for details.");
 			}
 		}
 	}

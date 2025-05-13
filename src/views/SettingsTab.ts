@@ -5,11 +5,13 @@ import { FieldDefinition } from "src/types";
 export default class SettingsTab extends PluginSettingTab {
 	plugin: ObsidianHardcover;
 	SYNC_CTA_LABEL: string;
+	debugBookLimit: number;
 
 	constructor(app: App, plugin: ObsidianHardcover) {
 		super(app, plugin);
 		this.plugin = plugin;
 		this.SYNC_CTA_LABEL = "Sync now";
+		this.debugBookLimit = 1;
 	}
 
 	// TODO: improve UI labels and descriptions
@@ -277,6 +279,43 @@ export default class SettingsTab extends PluginSettingTab {
 		}
 	}
 
+	private renderDebugSettings(containerEl: HTMLElement) {
+		containerEl.createEl("h3", { text: "Debug Options" });
+
+		new Setting(containerEl)
+			.setName("Debug: Sync with limited books")
+			.setDesc("Run the sync with only a few books to test the full process")
+			.addText((text) =>
+				text
+					.setPlaceholder("1")
+					.setValue(String(this.debugBookLimit))
+					.onChange(async (value) => {
+						this.debugBookLimit = parseInt(value) || 1;
+					})
+			)
+			.addButton((button) => {
+				button.setButtonText("Debug Sync");
+				button.onClick(async () => {
+					// Show loading state
+					button.setButtonText("Syncing...");
+					button.setDisabled(true);
+
+					try {
+						await this.plugin.syncService.startSync({
+							debugLimit: this.debugBookLimit,
+						});
+						this.display();
+					} catch (error) {
+						console.error("Debug sync failed:", error);
+					} finally {
+						// Reset button state
+						button.setButtonText("Debug Sync");
+						button.setDisabled(false);
+					}
+				});
+			});
+	}
+
 	display(): void {
 		const { containerEl } = this;
 
@@ -293,6 +332,7 @@ export default class SettingsTab extends PluginSettingTab {
 		this.renderUserIdSetting(containerEl);
 		this.renderBooksCountSetting(containerEl);
 		this.renderClearId(containerEl);
+		this.renderDebugSettings(containerEl);
 
 		// Field settings
 		this.renderFieldSettings(containerEl);
