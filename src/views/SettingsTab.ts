@@ -1,6 +1,10 @@
 import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
 import ObsidianHardcover from "src/main";
-import { FieldDefinition } from "src/types";
+import {
+	ActivityDateFieldConfig,
+	FieldDefinition,
+	FieldsSettings,
+} from "src/types";
 
 export default class SettingsTab extends PluginSettingTab {
 	plugin: ObsidianHardcover;
@@ -179,17 +183,19 @@ export default class SettingsTab extends PluginSettingTab {
 			{
 				key: "firstRead",
 				name: "First Read",
-				description: "Creates firstReadStart and firstReadEnd properties",
+				description: "Start and end date of first read",
+				isActivityDateField: true,
 			},
 			{
 				key: "lastRead",
 				name: "Last Read",
-				description: "Creates lastReadStart and lastReadEnd properties",
+				description: "Start and end date of last read",
+				isActivityDateField: true,
 			},
 			{
 				key: "rereads",
 				name: "Rereads",
-				description: "Number of times read",
+				description: "Number of re-reads",
 			},
 		];
 
@@ -234,19 +240,21 @@ export default class SettingsTab extends PluginSettingTab {
 				cls: "nested-settings",
 			});
 
-			new Setting(additionalSettingsContainer)
-				.setName("Property name")
-				.setDesc(`Frontmatter property name for ${field.name.toLowerCase()}`)
-				.addText((text) =>
-					text
-						.setPlaceholder(field.key)
-						.setValue(fieldSettings.propertyName)
-						.onChange(async (value) => {
-							this.plugin.settings.fieldsSettings[field.key].propertyName =
-								value || field.key;
-							await this.plugin.saveSettings();
-						})
-				);
+			if (field.key !== "firstRead" && field.key !== "lastRead") {
+				new Setting(additionalSettingsContainer)
+					.setName("Property name")
+					.setDesc(`Frontmatter property name for ${field.name.toLowerCase()}`)
+					.addText((text) =>
+						text
+							.setPlaceholder(field.key)
+							.setValue(fieldSettings.propertyName)
+							.onChange(async (value) => {
+								this.plugin.settings.fieldsSettings[field.key].propertyName =
+									value || field.key;
+								await this.plugin.saveSettings();
+							})
+					);
+			}
 
 			if (field.hasDataSource) {
 				const sourceKey =
@@ -276,7 +284,54 @@ export default class SettingsTab extends PluginSettingTab {
 							);
 					});
 			}
+
+			// add specific fields for date properties
+			if (field.key === "firstRead" || field.key === "lastRead") {
+				this.addActivityDatePropertyField(
+					additionalSettingsContainer,
+					field.key,
+					"start",
+					field.name
+				);
+				this.addActivityDatePropertyField(
+					additionalSettingsContainer,
+					field.key,
+					"end",
+					field.name
+				);
+			}
 		}
+	}
+
+	private addActivityDatePropertyField(
+		containerEl: HTMLElement,
+		fieldKey: keyof FieldsSettings,
+		type: "start" | "end",
+		fieldName: string
+	) {
+		const fieldSettings = this.plugin.settings.fieldsSettings[
+			fieldKey
+		] as ActivityDateFieldConfig;
+		const propName = type === "start" ? "startPropertyName" : "endPropertyName";
+		const defaultValue =
+			type === "start" ? `${fieldKey}Start` : `${fieldKey}End`;
+
+		new Setting(containerEl)
+			.setName(`${type.charAt(0).toUpperCase() + type.slice(1)} date property`)
+			.setDesc(`Property name for ${fieldName.toLowerCase()} ${type} date`)
+			.addText((text) => {
+				text
+					.setPlaceholder(defaultValue)
+					.setValue(fieldSettings[propName])
+					.onChange(async (value) => {
+						(
+							this.plugin.settings.fieldsSettings[
+								fieldKey
+							] as ActivityDateFieldConfig
+						)[propName] = value || defaultValue;
+						await this.plugin.saveSettings();
+					});
+			});
 	}
 
 	private renderDebugSettings(containerEl: HTMLElement) {
