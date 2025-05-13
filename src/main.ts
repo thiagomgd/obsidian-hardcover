@@ -56,16 +56,19 @@ export default class ObsidianHardcover extends Plugin {
 		const styleEl = document.createElement("style");
 		styleEl.id = "obsidian-hardcover-plugin-styles";
 		styleEl.textContent = `
-    .field-groups-container {
+    .obhc-settings .field-groups-container {
 		}
-		.field-separator {
+		.obhc-settings .field-separator {
 			margin: 1.2rem 0;
 		}
-		.nested-settings {
+		.obhc-settings .nested-settings {
 			margin-left: 0;
 		}
-		.setting-item:last-of-type {
+		.obhc-settings .setting-item:last-of-type {
 			padding-bottom: 0;
+		}
+		.obhc-settings .mod-toggle {
+			border: none;
 		}
   `;
 		document.head.appendChild(styleEl);

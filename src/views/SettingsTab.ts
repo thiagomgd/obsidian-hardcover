@@ -278,6 +278,8 @@ export default class SettingsTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		containerEl.addClass("obhc-settings");
+
 		this.renderApiTokenSetting(containerEl);
 		this.renderLastSyncTimestampSetting(containerEl);
 		this.renderSyncSetting(containerEl);
