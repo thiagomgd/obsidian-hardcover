@@ -18,7 +18,7 @@ export class HardcoverAPI {
 	}
 
 	// Update the query if settings change
-	rebuildQuery(settings: PluginSettings) {
+	updateSettings(settings: PluginSettings) {
 		this.settings = settings;
 		this.queryBuilder = new QueryBuilder(settings); // update query builder
 	}

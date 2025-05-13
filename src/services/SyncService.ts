@@ -12,6 +12,8 @@ export class SyncService {
 	}
 
 	async getBooks(userId: number, totalBooks: number) {
+		const { metadataService, noteService } = this.plugin;
+
 		const notice = new Notice("Syncing Hardcover library...", 0);
 
 		try {
@@ -48,7 +50,8 @@ export class SyncService {
 			for (let i = 0; i < books.length; i++) {
 				updateProgress("Creating notes");
 				const book = books[i];
-				console.log("Creating note for: ", book.book_id);
+				const metadata = metadataService.buildMetadata(book);
+				await noteService.createNote(metadata);
 				completedTasks = totalBooks + (i + 1);
 			}
 

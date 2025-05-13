@@ -1,7 +1,15 @@
 import { HardcoverUserBook, PluginSettings } from "src/types";
 
 export class MetadataService {
-	constructor(private settings: PluginSettings) {}
+	private settings: PluginSettings;
+
+	constructor(settings: PluginSettings) {
+		this.settings = settings;
+	}
+
+	updateSettings(settings: PluginSettings): void {
+		this.settings = settings;
+	}
 
 	buildMetadata(userBook: HardcoverUserBook): any {
 		const { fieldsSettings, dataSourcePreferences } = this.settings;
