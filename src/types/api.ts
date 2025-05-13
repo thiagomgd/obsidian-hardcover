@@ -52,7 +52,7 @@ interface HardcoverEdition {
 	};
 }
 
-interface HardcoverUserBooksReads {
+export interface HardcoverUserBooksReads {
 	started_at: string;
 	finished_at: string;
 }

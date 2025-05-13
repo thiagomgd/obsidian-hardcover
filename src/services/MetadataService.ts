@@ -1,4 +1,8 @@
-import { HardcoverUserBook, PluginSettings } from "src/types";
+import {
+	HardcoverUserBook,
+	HardcoverUserBooksReads,
+	PluginSettings,
+} from "src/types";
 
 export class MetadataService {
 	private settings: PluginSettings;
@@ -21,7 +25,7 @@ export class MetadataService {
 		const { titleSource, coverSource, releaseDateSource } =
 			dataSourcePreferences;
 
-		const { book, edition } = userBook;
+		const { book, edition, user_book_reads: readingActivity } = userBook;
 
 		// add title (from book or edition based on user settings)
 		const currentTitleSource = titleSource === "book" ? book : edition;
@@ -65,6 +69,39 @@ export class MetadataService {
 				metadata[fieldsSettings.contributors.propertyName] =
 					otherContributors.map((c) => `${c.name} (${c.role})`);
 			}
+		}
+
+		// add release date (from book or edition based on user settings)
+		const currentReleaseDateSource =
+			releaseDateSource === "book" ? book : edition;
+		if (
+			fieldsSettings.releaseDate.enabled &&
+			currentReleaseDateSource.release_date
+		) {
+			metadata[fieldsSettings.releaseDate.propertyName] =
+				currentReleaseDateSource.release_date;
+		}
+
+		// add description
+		if (fieldsSettings.description.enabled && book.description) {
+			metadata[fieldsSettings.description.propertyName] = book.description;
+		}
+
+		// TODO: add genres
+		// TODO: add series
+
+		// add publisher
+		if (fieldsSettings.publisher.enabled && edition.publisher?.name) {
+			metadata[fieldsSettings.publisher.propertyName] = edition.publisher.name;
+		}
+
+		// add first read
+		if (fieldsSettings.firstRead.enabled || fieldsSettings.lastRead.enabled) {
+			const activity = this.extractReadingActivity(readingActivity);
+
+			// if (fieldsSettings.firstRead.enabled && activity.firstRead) {
+			// 	metadata[fieldsSettings.firstRead.propertyName] =
+			// }
 		}
 
 		return metadata;
@@ -119,5 +156,41 @@ export class MetadataService {
 			.slice(0, 5); // limit to 5 authors
 
 		return contributors;
+	}
+
+	private extractReadingActivity(reads: HardcoverUserBooksReads[]) {
+		if (!reads || !Array.isArray(reads) || reads.length === 0) {
+			return { firstRead: null, lastRead: null, rereads: 0 };
+		}
+
+		// create a copy of the array
+		const sortedReads = [...reads];
+
+		// sort by started_at date (oldest first)
+		sortedReads.sort((a, b) => {
+			const dateA = new Date(a.started_at || "");
+			const dateB = new Date(b.started_at || "");
+			return dateA.getTime() - dateB.getTime();
+		});
+
+		// first read is the oldest - first after sorting
+		const firstRead = sortedReads[0];
+
+		// last read is the newest - last after sorting
+		const lastRead = sortedReads[sortedReads.length - 1];
+
+		const rereads = Math.max(0, sortedReads.length - 1); // -1 because first read isn't a reread
+
+		return {
+			firstRead: {
+				start: firstRead.started_at || null,
+				end: firstRead.finished_at || null,
+			},
+			lastRead: {
+				start: lastRead.started_at || null,
+				end: lastRead.finished_at || null,
+			},
+			rereads,
+		};
 	}
 }
