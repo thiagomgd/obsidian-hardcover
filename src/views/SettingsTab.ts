@@ -169,6 +169,7 @@ export default class SettingsTab extends PluginSettingTab {
 				name: "Description",
 				description: "Book description",
 			},
+			{ key: "url", name: "URL", description: "Hardcover URL" },
 			{ key: "genres", name: "Genres", description: "Book genres" },
 			{
 				key: "series",

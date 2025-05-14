@@ -1,3 +1,4 @@
+import { HARDCOVER_BOOKS_ROUTE, HARDCOVER_URL } from "src/config";
 import {
 	HardcoverUserBook,
 	HardcoverUserBooksReads,
@@ -85,6 +86,13 @@ export class MetadataService {
 		// add description
 		if (fieldsSettings.description.enabled && book.description) {
 			metadata[fieldsSettings.description.propertyName] = book.description;
+		}
+
+		// add url
+		if (fieldsSettings.url.enabled && book.slug) {
+			metadata[
+				fieldsSettings.url.propertyName
+			] = `${HARDCOVER_URL}/${HARDCOVER_BOOKS_ROUTE}/${book.slug}`;
 		}
 
 		// TODO: add genres

@@ -36,6 +36,7 @@ export interface FieldsSettings {
 	authors: FieldConfig;
 	contributors: FieldConfig;
 	releaseDate: FieldConfig;
+	url: FieldConfig;
 
 	// book fields
 	description: FieldConfig;
@@ -60,6 +61,7 @@ export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
 	authors: { enabled: true, propertyName: "authors" },
 	contributors: { enabled: true, propertyName: "contributors" },
 	releaseDate: { enabled: true, propertyName: "releaseDate" },
+	url: { enabled: true, propertyName: "url" },
 
 	description: { enabled: true, propertyName: "description" },
 	genres: { enabled: true, propertyName: "genres" },

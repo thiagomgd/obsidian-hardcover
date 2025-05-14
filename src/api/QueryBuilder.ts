@@ -81,6 +81,10 @@ export class QueryBuilder {
 			fields.push("description");
 		}
 
+		if (settings.url.enabled) {
+			fields.push("slug");
+		}
+
 		return fields.join("\n                        ");
 	}
 

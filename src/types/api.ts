@@ -40,6 +40,7 @@ interface HardcoverBook {
 	description: string;
 	release_date: string;
 	cached_image: Record<string, any>;
+	slug: string;
 }
 
 interface HardcoverEdition {
