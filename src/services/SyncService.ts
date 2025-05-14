@@ -2,13 +2,6 @@ import { Notice } from "obsidian";
 import { HardcoverAPI } from "src/api/HardcoverAPI";
 import ObsidianHardcover from "src/main";
 
-interface GetBooksParams {
-	userId: number;
-	totalBooks: number;
-	updatedAfter?: string;
-	debugMode?: boolean;
-}
-
 export class SyncService {
 	private plugin: ObsidianHardcover;
 	private hardcoverAPI: HardcoverAPI;
@@ -18,12 +11,64 @@ export class SyncService {
 		this.hardcoverAPI = plugin.hardcoverAPI;
 	}
 
-	async getBooks({
-		userId,
-		totalBooks,
-		updatedAfter,
-		debugMode = false,
-	}: GetBooksParams) {
+	async startSync(options: { debugLimit?: number } = {}) {
+		const isDebugMode = options.debugLimit !== undefined;
+
+		try {
+			await this.ensureUserData();
+
+			// calculate how many books to process
+			const booksToProcess = this.getBooksToProcess(
+				isDebugMode,
+				options.debugLimit
+			);
+
+			// show debug notice if in debug mode
+			if (isDebugMode) {
+				console.log(
+					`Debug sync: Processing ${booksToProcess}/${this.plugin.settings.booksCount} books`
+				);
+				new Notice(`DEBUG MODE: Sync limited to ${booksToProcess} books`);
+			}
+
+			if (booksToProcess > 0) {
+				await this.syncBooks(booksToProcess, isDebugMode);
+			}
+		} catch (error) {
+			console.error("Sync failed:", error);
+			new Notice("Sync failed. Check console for details.");
+		}
+	}
+
+	private async ensureUserData() {
+		if (this.plugin.settings.userId && this.plugin.settings.booksCount) {
+			return;
+		}
+
+		// fetch user ID
+		const user = await this.hardcoverAPI.fetchUserId();
+		if (!user?.id) {
+			throw new Error("No user ID found in response");
+		}
+
+		// fetch book count
+		const booksCount = await this.hardcoverAPI.fetchBooksCount(user.id);
+
+		// save to settings
+		this.plugin.settings.userId = user.id;
+		this.plugin.settings.booksCount = booksCount;
+		await this.plugin.saveSettings();
+	}
+
+	private getBooksToProcess(isDebugMode: boolean, debugLimit?: number): number {
+		const totalBooks = this.plugin.settings.booksCount || 0;
+		return isDebugMode && debugLimit
+			? Math.min(debugLimit, totalBooks)
+			: totalBooks;
+	}
+
+	private async syncBooks(totalBooks: number, debugMode: boolean = false) {
+		const { userId, lastSyncTimestamp } = this.plugin.settings;
 		const { metadataService, noteService } = this.plugin;
 
 		const notice = new Notice("Syncing Hardcover library...", 0);
@@ -41,9 +86,9 @@ export class SyncService {
 			updateProgress("Fetching books");
 
 			const books = await this.hardcoverAPI.fetchEntireLibrary({
-				userId,
+				userId: userId!,
 				totalBooks,
-				updatedAfter,
+				updatedAfter: lastSyncTimestamp,
 				onProgress(current, total) {
 					completedTasks = current;
 					updateProgress("Fetching books");
@@ -62,96 +107,22 @@ export class SyncService {
 				completedTasks = totalBooks + (i + 1);
 			}
 
+			// update timestamp after successful sync
+			this.plugin.settings.lastSyncTimestamp = new Date().toISOString();
+			await this.plugin.saveSettings();
+
 			notice.hide();
 
-			if (debugMode) {
-				new Notice(
-					`DEBUG: Hardcover library sync complete with ${totalBooks} books!`
-				);
-			} else {
-				new Notice("Hardcover library sync complete!");
-			}
+			const message = debugMode
+				? `DEBUG: Hardcover library sync complete with ${books.length} books!`
+				: `Hardcover library sync complete with ${books.length} books!`;
+
+			new Notice(message);
 		} catch (error) {
 			notice.hide();
 			console.error("Error syncing library:", error);
 			new Notice("Error syncing Hardcover library. Check console for details.");
-		}
-	}
-
-	async updateTimestamp() {
-		// update timestamp after successful sync
-		this.plugin.settings.lastSyncTimestamp = new Date().toISOString();
-		await this.plugin.saveSettings();
-	}
-
-	async startSync(options: { debugLimit?: number } = {}) {
-		const storedUserId = this.plugin.settings.userId;
-		const storedBooksCount = this.plugin.settings.booksCount;
-		const lastSyncTimestamp = this.plugin.settings.lastSyncTimestamp;
-		const isDebugMode = options.debugLimit !== undefined;
-
-		if (storedUserId && storedBooksCount) {
-			// if in debug mode, use the limited count, otherwise use the full count
-			const booksToProcess = isDebugMode
-				? Math.min(options.debugLimit!, storedBooksCount)
-				: storedBooksCount;
-
-			if (isDebugMode) {
-				console.log(
-					`Debug sync: Processing ${booksToProcess}/${storedBooksCount} books`
-				);
-				new Notice(`DEBUG MODE: Sync limited to ${booksToProcess} books`);
-			}
-
-			await this.getBooks({
-				userId: storedUserId,
-				totalBooks: booksToProcess,
-				updatedAfter: lastSyncTimestamp,
-			});
-
-			this.updateTimestamp();
-		} else {
-			try {
-				const user = await this.hardcoverAPI.fetchUserId();
-
-				if (user?.id) {
-					this.plugin.settings.userId = user.id;
-
-					const booksCount = await this.hardcoverAPI.fetchBooksCount(user.id);
-
-					// if in debug mode, limit the books to process
-					const booksToProcess = isDebugMode
-						? Math.min(options.debugLimit!, booksCount)
-						: booksCount;
-
-					// store the actual books count regardless of debug mode
-					this.plugin.settings.userId = user.id;
-					this.plugin.settings.booksCount = booksCount;
-					await this.plugin.saveSettings();
-
-					if (isDebugMode) {
-						console.log(
-							`Debug sync: Processing ${booksToProcess}/${booksCount} books`
-						);
-						new Notice(`DEBUG MODE: Sync limited to ${booksToProcess} books`);
-					}
-
-					if (booksToProcess > 0) {
-						await this.getBooks({
-							userId: user.id,
-							totalBooks: booksToProcess,
-							updatedAfter: lastSyncTimestamp,
-						});
-						this.updateTimestamp();
-					}
-				} else {
-					console.error("No user ID found in response");
-					new Notice("Error: No user ID found");
-				}
-			} catch (error) {
-				console.error("Error fetching user ID: ", error);
-				new Notice("Error fetching user ID. Check console for details.");
-			}
+			throw error;
 		}
 	}
 }
