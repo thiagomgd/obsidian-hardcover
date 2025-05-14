@@ -13,15 +13,7 @@ export class NoteService {
 
 	async createNote(bookMetadata: any): Promise<TFile | null> {
 		try {
-			const titleProperty =
-				this.plugin.settings.fieldsSettings.title.propertyName;
-			const releaseDateProperty =
-				this.plugin.settings.fieldsSettings.releaseDate.propertyName;
-
-			const title = bookMetadata[titleProperty] || "Untitled";
-			const releaseYear = bookMetadata[releaseDateProperty]
-				? new Date(bookMetadata.releaseDate).getFullYear()
-				: "";
+			const { title, releaseYear } = this.getNoteTitleData(bookMetadata);
 
 			const filename = this.fileUtils.generateFilename(title, releaseYear);
 
@@ -35,7 +27,7 @@ export class NoteService {
 			const frontmatter = this.createFrontmatter(bookMetadata);
 
 			// TODO: create full note content
-			const noteContent = `---\n${frontmatter}\n---\n\n# ${title}\n`;
+			const noteContent = this.getFrontmatterString(frontmatter, title);
 
 			let file;
 			if (await this.vault.adapter.exists(fullPath)) {
@@ -56,6 +48,45 @@ export class NoteService {
 		}
 	}
 
+	async updateNote(
+		bookMetadata: any,
+		existingFile: TFile
+	): Promise<TFile | null> {
+		try {
+			const frontmatter = this.createFrontmatter(bookMetadata);
+			const title = this.getBookTitle(bookMetadata);
+
+			const noteContent = this.getFrontmatterString(frontmatter, title);
+
+			await this.vault.modify(existingFile, noteContent);
+			console.log(`Updated note: ${existingFile.path}`);
+
+			return existingFile;
+		} catch (error) {
+			console.error("Error updating note:", error);
+			return null;
+		}
+	}
+
+	private getBookTitle(bookMetadata: any) {
+		const titleProperty =
+			this.plugin.settings.fieldsSettings.title.propertyName;
+
+		return bookMetadata[titleProperty] || "Untitled";
+	}
+
+	private getNoteTitleData(bookMetadata: any) {
+		const title = this.getBookTitle(bookMetadata);
+		const releaseDateProperty =
+			this.plugin.settings.fieldsSettings.releaseDate.propertyName;
+
+		const releaseYear = bookMetadata[releaseDateProperty]
+			? new Date(bookMetadata.releaseDate).getFullYear()
+			: "";
+
+		return { title, releaseYear };
+	}
+
 	private async ensureFolderExists(folderPath: string): Promise<void> {
 		if (!folderPath) return;
 
@@ -64,6 +95,10 @@ export class NoteService {
 			console.log(`Creating folder: ${folderPath}`);
 			await this.vault.createFolder(folderPath);
 		}
+	}
+
+	private getFrontmatterString(frontmatter: string, title: string) {
+		return `---\n${frontmatter}\n---\n\n# ${title}\n`;
 	}
 
 	private createFrontmatter(metadata: Record<string, any>): string {
