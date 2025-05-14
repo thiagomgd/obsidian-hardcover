@@ -152,10 +152,13 @@ export class HardcoverAPI {
 			updatedAfter
 		);
 
-		const variables = { userId, offset, limit };
-		if (updatedAfter) {
-			variables.updatedAfter = updatedAfter;
-		}
+		const variables = {
+			userId,
+			offset,
+			limit,
+			...(updatedAfter ? { updatedAfter } : {}),
+		};
+
 		const data = await this.graphqlRequest(query, variables);
 		return data.user_books;
 	}
