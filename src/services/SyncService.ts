@@ -2,6 +2,13 @@ import { Notice } from "obsidian";
 import { HardcoverAPI } from "src/api/HardcoverAPI";
 import ObsidianHardcover from "src/main";
 
+interface GetBooksParams {
+	userId: number;
+	totalBooks: number;
+	updatedAfter?: string;
+	debugMode?: boolean;
+}
+
 export class SyncService {
 	private plugin: ObsidianHardcover;
 	private hardcoverAPI: HardcoverAPI;
@@ -11,11 +18,12 @@ export class SyncService {
 		this.hardcoverAPI = plugin.hardcoverAPI;
 	}
 
-	async getBooks(
-		userId: number,
-		totalBooks: number,
-		debugMode: boolean = false
-	) {
+	async getBooks({
+		userId,
+		totalBooks,
+		updatedAfter,
+		debugMode = false,
+	}: GetBooksParams) {
 		const { metadataService, noteService } = this.plugin;
 
 		const notice = new Notice("Syncing Hardcover library...", 0);
@@ -35,6 +43,7 @@ export class SyncService {
 			const books = await this.hardcoverAPI.fetchEntireLibrary({
 				userId,
 				totalBooks,
+				updatedAfter,
 				onProgress(current, total) {
 					completedTasks = current;
 					updateProgress("Fetching books");
@@ -69,9 +78,16 @@ export class SyncService {
 		}
 	}
 
+	async updateTimestamp() {
+		// update timestamp after successful sync
+		this.plugin.settings.lastSyncTimestamp = new Date().toISOString();
+		await this.plugin.saveSettings();
+	}
+
 	async startSync(options: { debugLimit?: number } = {}) {
 		const storedUserId = this.plugin.settings.userId;
 		const storedBooksCount = this.plugin.settings.booksCount;
+		const lastSyncTimestamp = this.plugin.settings.lastSyncTimestamp;
 		const isDebugMode = options.debugLimit !== undefined;
 
 		if (storedUserId && storedBooksCount) {
@@ -87,7 +103,13 @@ export class SyncService {
 				new Notice(`DEBUG MODE: Sync limited to ${booksToProcess} books`);
 			}
 
-			await this.getBooks(storedUserId, booksToProcess);
+			await this.getBooks({
+				userId: storedUserId,
+				totalBooks: booksToProcess,
+				updatedAfter: lastSyncTimestamp,
+			});
+
+			this.updateTimestamp();
 		} else {
 			try {
 				const user = await this.hardcoverAPI.fetchUserId();
@@ -115,7 +137,12 @@ export class SyncService {
 					}
 
 					if (booksToProcess > 0) {
-						await this.getBooks(user.id, booksToProcess);
+						await this.getBooks({
+							userId: user.id,
+							totalBooks: booksToProcess,
+							updatedAfter: lastSyncTimestamp,
+						});
+						this.updateTimestamp();
 					}
 				} else {
 					console.error("No user ID found in response");

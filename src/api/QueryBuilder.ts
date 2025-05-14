@@ -7,7 +7,11 @@ export class QueryBuilder {
 		this.settings = settings;
 	}
 
-	buildUserBooksQuery(offset: number, limit: number): string {
+	buildUserBooksQuery(
+		offset: number,
+		limit: number,
+		updatedAfter?: string
+	): string {
 		const fieldsSettings = this.settings.fieldsSettings;
 		const dataPrefs = this.settings.dataSourcePreferences;
 
@@ -16,10 +20,19 @@ export class QueryBuilder {
 		const editionFields = this.buildEditionFields(fieldsSettings, dataPrefs);
 		const readsFields = this.buildReadsFields(fieldsSettings);
 
+		// build where clause with optional timestamp filter
+		let whereClause = `where: {user_id: {_eq: $userId}`;
+		if (updatedAfter) {
+			whereClause += `, updated_at: {_gt: $updatedAfter}`;
+		}
+		whereClause += `}`;
+
 		return `
-            query GetUserLibrary($userId: Int!, $offset: Int!, $limit: Int!) {
+            query GetUserLibrary($userId: Int!, $offset: Int!, $limit: Int!${
+							updatedAfter ? ", $updatedAfter: timestamptz!" : ""
+						}) {
                 user_books(
-                    where: {user_id: {_eq: $userId}}
+                    ${whereClause}
                     order_by: {book_id: asc}
                     offset: $offset
                     limit: $limit

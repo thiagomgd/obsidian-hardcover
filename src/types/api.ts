@@ -17,11 +17,13 @@ export interface LibraryPageParams {
 	userId: number;
 	offset: number;
 	limit: number;
+	updatedAfter?: string;
 }
 
 export interface FetchLibraryParams {
 	userId: number;
 	totalBooks: number;
+	updatedAfter?: string;
 	onProgress?: (current: number, total: number) => void;
 }
 

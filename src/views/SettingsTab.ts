@@ -82,6 +82,7 @@ export default class SettingsTab extends PluginSettingTab {
 			.addText((text) =>
 				text
 					.setPlaceholder("YYYY-MM-DD'T'HH:mm:ss.SSSSSSXXX")
+					.setValue(this.plugin.settings.lastSyncTimestamp || "")
 					.onChange(async (value) => {
 						this.plugin.settings.lastSyncTimestamp = value;
 						await this.plugin.saveSettings();
