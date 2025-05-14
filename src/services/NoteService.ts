@@ -107,8 +107,14 @@ export class NoteService {
 				if (Array.isArray(value)) {
 					return `${key}: ${JSON.stringify(value)}`;
 				} else if (typeof value === "string") {
-					// escape strings with special characters
-					return `${key}: "${value.replace(/"/g, '\\"')}"`;
+					if (key === "description") {
+						// handle description field converting newlines to escaped lines
+						const escapedValue = value.replace(/\n/g, "\\n");
+						return `${key}: "${escapedValue.replace(/"/g, '\\"')}"`;
+					} else {
+						// for other string fields, just escape quotes
+						return `${key}: "${value.replace(/"/g, '\\"')}"`;
+					}
 				} else {
 					return `${key}: ${value}`;
 				}
