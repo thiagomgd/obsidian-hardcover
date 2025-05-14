@@ -116,8 +116,50 @@ export class NoteService {
 			.join("\n");
 	}
 
-	// TODO
-	// async findNoteByHardcoverId(id: string): Promise<TFile | null> {
-	// 	return null;
-	// }
+	async findNoteByHardcoverId(hardcoverBookId: number): Promise<TFile | null> {
+		try {
+			const folderPath = this.plugin.settings.targetFolder;
+
+			const folderExists = await this.vault.adapter.exists(folderPath);
+			if (!folderExists) {
+				console.log(`Specified target folder doesn't exist: ${folderPath}`);
+				return null;
+			}
+
+			// get all markdown files in the folder
+			const folder = this.vault.getFolderByPath(folderPath);
+			if (!folder) {
+				console.log(`Couldn't get folder object for: ${folderPath}`);
+				return null;
+			}
+
+			// search through files in the folder
+			for (const file of folder.children) {
+				// only check markdown files
+				if (file instanceof TFile && file.extension === "md") {
+					const content = await this.vault.read(file);
+
+					// check if it has frontmatter
+					const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+					if (frontmatterMatch) {
+						const frontmatter = frontmatterMatch[1];
+
+						// check if hardcover_book_id matches
+						const idMatch = frontmatter.match(/hardcover_book_id:\s*(\d+)/);
+						if (idMatch && parseInt(idMatch[1]) === hardcoverBookId) {
+							return file;
+						}
+					}
+				}
+			}
+
+			return null;
+		} catch (error) {
+			console.error(
+				`Error finding note by Hardcover Book ID ${hardcoverBookId}:`,
+				error
+			);
+			return null;
+		}
+	}
 }
