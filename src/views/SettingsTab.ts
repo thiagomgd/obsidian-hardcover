@@ -193,9 +193,9 @@ export default class SettingsTab extends PluginSettingTab {
 				isActivityDateField: true,
 			},
 			{
-				key: "rereads",
-				name: "Rereads",
-				description: "Number of re-reads",
+				key: "totalReads",
+				name: "Total reads",
+				description: "Times read",
 			},
 		];
 

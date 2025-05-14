@@ -48,7 +48,7 @@ export interface FieldsSettings {
 	// user_book_reads fields
 	firstRead: ActivityDateFieldConfig;
 	lastRead: ActivityDateFieldConfig; // enabling firstRead/lastRead will create both start/end properties in the frontmatter
-	rereads: FieldConfig;
+	totalReads: FieldConfig;
 }
 
 export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
@@ -79,7 +79,7 @@ export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
 		startPropertyName: "lastReadStart",
 		endPropertyName: "lastReadEnd",
 	},
-	rereads: { enabled: true, propertyName: "rereads" },
+	totalReads: { enabled: true, propertyName: "totalReads" },
 };
 
 export interface FieldDefinition {

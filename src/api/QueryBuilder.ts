@@ -121,7 +121,7 @@ export class QueryBuilder {
 		if (
 			settings.firstRead.enabled ||
 			settings.lastRead.enabled ||
-			settings.rereads.enabled
+			settings.totalReads.enabled
 		) {
 			return `user_book_reads(order_by: {started_at: asc}) {
                         started_at

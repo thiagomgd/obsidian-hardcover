@@ -95,13 +95,36 @@ export class MetadataService {
 			metadata[fieldsSettings.publisher.propertyName] = edition.publisher.name;
 		}
 
-		// add first read
-		if (fieldsSettings.firstRead.enabled || fieldsSettings.lastRead.enabled) {
+		// add reading activity
+		if (
+			fieldsSettings.firstRead.enabled ||
+			fieldsSettings.lastRead.enabled ||
+			fieldsSettings.totalReads.enabled
+		) {
 			const activity = this.extractReadingActivity(readingActivity);
 
-			// if (fieldsSettings.firstRead.enabled && activity.firstRead) {
-			// 	metadata[fieldsSettings.firstRead.propertyName] =
-			// }
+			// add first read
+			if (fieldsSettings.firstRead.enabled && activity.firstRead) {
+				metadata[fieldsSettings.firstRead.startPropertyName] =
+					activity.firstRead.start;
+
+				metadata[fieldsSettings.firstRead.endPropertyName] =
+					activity.firstRead.end;
+			}
+
+			// add last read
+			if (fieldsSettings.lastRead.enabled && activity.lastRead) {
+				metadata[fieldsSettings.lastRead.startPropertyName] =
+					activity.lastRead.start;
+
+				metadata[fieldsSettings.lastRead.endPropertyName] =
+					activity.lastRead.end;
+			}
+
+			// add number of total reads
+			if (fieldsSettings.totalReads.enabled && activity.totalReads) {
+				metadata[fieldsSettings.totalReads.propertyName] = activity.totalReads;
+			}
 		}
 
 		return metadata;
@@ -160,7 +183,7 @@ export class MetadataService {
 
 	private extractReadingActivity(reads: HardcoverUserBooksReads[]) {
 		if (!reads || !Array.isArray(reads) || reads.length === 0) {
-			return { firstRead: null, lastRead: null, rereads: 0 };
+			return { firstRead: null, lastRead: null, totalReads: 0 };
 		}
 
 		// create a copy of the array
@@ -179,7 +202,7 @@ export class MetadataService {
 		// last read is the newest - last after sorting
 		const lastRead = sortedReads[sortedReads.length - 1];
 
-		const rereads = Math.max(0, sortedReads.length - 1); // -1 because first read isn't a reread
+		const totalReads = sortedReads.length;
 
 		return {
 			firstRead: {
@@ -190,7 +213,7 @@ export class MetadataService {
 				start: lastRead.started_at || null,
 				end: lastRead.finished_at || null,
 			},
-			rereads,
+			totalReads,
 		};
 	}
 }

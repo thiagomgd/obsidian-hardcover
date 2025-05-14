@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { HardcoverAPI } from "src/api/HardcoverAPI";
 import SettingsTab from "./views/SettingsTab";
 import { DEFAULT_FIELDS_SETTINGS, PluginSettings } from "./types";
@@ -80,5 +80,11 @@ export default class ObsidianHardcover extends Plugin {
 		await this.saveData(this.settings);
 		this.hardcoverAPI.updateSettings(this.settings);
 		this.metadataService.updateSettings(this.settings);
+	}
+
+	async resetSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS);
+		await this.saveSettings();
+		new Notice("Settings reset to defaults");
 	}
 }
