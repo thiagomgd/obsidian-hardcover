@@ -6,6 +6,7 @@ import { SyncService } from "./services/SyncService";
 import { MetadataService } from "./services/MetadataService";
 import { FileUtils } from "./utils/FileUtils";
 import { NoteService } from "./services/NoteService";
+import { HARDCOVER_STATUS_MAP } from "./config";
 
 const DEFAULT_SETTINGS: PluginSettings = {
 	apiKey: "",
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS: PluginSettings = {
 		coverSource: "edition",
 		releaseDateSource: "edition",
 	},
+	statusMapping: HARDCOVER_STATUS_MAP,
 };
 
 export default class ObsidianHardcover extends Plugin {

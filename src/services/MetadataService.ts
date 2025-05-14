@@ -138,15 +138,11 @@ export class MetadataService {
 		return metadata;
 	}
 
-	private mapStatus(statusId: number): string {
-		const statusMap: Record<number, string> = {
-			1: "Want To Read",
-			2: "Currently Reading",
-			3: "Read",
-			4: "DNF",
-		};
-
-		return statusMap[statusId] || `Unknown (${statusId})`;
+	private mapStatus(statusId: number): string[] {
+		const statusText =
+			this.settings.statusMapping[statusId] || `Unknown (${statusId})`;
+		// return as array so obsidian property is a list
+		return [statusText];
 	}
 
 	private extractAuthors(contributorsData: Record<any, any>[]): string[] {

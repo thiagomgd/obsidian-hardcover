@@ -1,4 +1,5 @@
 import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
+import { HARDCOVER_STATUS_MAP } from "src/config";
 import ObsidianHardcover from "src/main";
 import {
 	ActivityDateFieldConfig,
@@ -301,6 +302,11 @@ export default class SettingsTab extends PluginSettingTab {
 					field.name
 				);
 			}
+
+			// add specific fields for status property
+			if (field.key === "status") {
+				this.renderStatusMappingSettings(containerEl);
+			}
 		}
 	}
 
@@ -333,6 +339,31 @@ export default class SettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 			});
+	}
+
+	private renderStatusMappingSettings(containerEl: HTMLElement) {
+		containerEl.createEl("p", {
+			text: "Customize how Hardcover statuses appear in your notes.",
+		});
+
+		const statusIds = Object.keys(HARDCOVER_STATUS_MAP);
+		const statusLabels = Object.values(HARDCOVER_STATUS_MAP);
+
+		statusIds.forEach((id, index) => {
+			new Setting(containerEl)
+				.setName(`${statusLabels[index]}`)
+				.setDesc(`Custom text for Hardcover status "${statusLabels[index]}"`)
+				.addText((text) =>
+					text
+						.setPlaceholder(statusLabels[index])
+						.setValue(this.plugin.settings.statusMapping[id] || "")
+						.onChange(async (value) => {
+							this.plugin.settings.statusMapping[id] =
+								value || statusLabels[index];
+							await this.plugin.saveSettings();
+						})
+				);
+		});
 	}
 
 	private renderDebugSettings(containerEl: HTMLElement) {

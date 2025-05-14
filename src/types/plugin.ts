@@ -13,6 +13,10 @@ export interface PluginSettings {
 		coverSource: "book" | "edition";
 		releaseDateSource: "book" | "edition";
 	};
+
+	statusMapping: {
+		[key: number]: string; // map hardcover status_id to custom string, will be put in array to allow for list type property in obsidian
+	};
 }
 
 export interface FieldConfig {
