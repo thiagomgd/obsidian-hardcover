@@ -101,12 +101,30 @@ export class SyncService {
 			// Fetch complete
 			completedTasks = totalBooks;
 
+			let createdNotesCount = 0;
+			let updatedNotesCount = 0;
+
 			// Task 2: create notes
 			for (let i = 0; i < books.length; i++) {
 				updateProgress("Creating notes");
 				const book = books[i];
 				const metadata = metadataService.buildMetadata(book);
-				await noteService.createNote(metadata);
+
+				// check if note already exists by checking hardcover book Id
+				const existingNote = await noteService.findNoteByHardcoverId(
+					book.book_id
+				);
+
+				if (existingNote) {
+					// update existing note
+					await noteService.updateNote(metadata, existingNote);
+					updatedNotesCount++;
+				} else {
+					// create new note
+					await noteService.createNote(metadata);
+					createdNotesCount++;
+				}
+
 				completedTasks = totalBooks + (i + 1);
 			}
 
@@ -117,8 +135,8 @@ export class SyncService {
 			notice.hide();
 
 			const message = debugMode
-				? `DEBUG: Hardcover library sync complete with ${books.length} books!`
-				: `Hardcover library sync complete with ${books.length} books!`;
+				? `DEBUG: Sync complete: ${createdNotesCount} created, ${updatedNotesCount} updated!`
+				: `Sync complete: ${createdNotesCount} created, ${updatedNotesCount} updated!`;
 
 			new Notice(message);
 		} catch (error) {
