@@ -346,7 +346,7 @@ export default class SettingsTab extends PluginSettingTab {
 			text: "Customize how Hardcover statuses appear in your notes.",
 		});
 
-		const statusIds = Object.keys(HARDCOVER_STATUS_MAP);
+		const statusIds = Object.keys(HARDCOVER_STATUS_MAP).map((id) => Number(id));
 		const statusLabels = Object.values(HARDCOVER_STATUS_MAP);
 
 		statusIds.forEach((id, index) => {
