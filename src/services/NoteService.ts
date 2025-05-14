@@ -13,8 +13,13 @@ export class NoteService {
 
 	async createNote(bookMetadata: any): Promise<TFile | null> {
 		try {
-			const title = bookMetadata.title || "Untitled";
-			const releaseYear = bookMetadata.release_date
+			const titleProperty =
+				this.plugin.settings.fieldsSettings.title.propertyName;
+			const releaseDateProperty =
+				this.plugin.settings.fieldsSettings.releaseDate.propertyName;
+
+			const title = bookMetadata[titleProperty] || "Untitled";
+			const releaseYear = bookMetadata[releaseDateProperty]
 				? new Date(bookMetadata.releaseDate).getFullYear()
 				: "";
 
