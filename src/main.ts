@@ -24,7 +24,7 @@ export default class ObsidianHardcover extends Plugin {
 		this.hardcoverAPI = new HardcoverAPI(this.settings);
 		this.fileUtils = new FileUtils();
 		this.metadataService = new MetadataService(this.settings);
-		this.noteService = new NoteService(this.app.vault, this.fileUtils);
+		this.noteService = new NoteService(this.app.vault, this.fileUtils, this);
 
 		// Instantiate main service
 		this.syncService = new SyncService(this);

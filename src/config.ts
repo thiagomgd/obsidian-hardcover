@@ -59,5 +59,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 		releaseDateSource: "edition",
 	},
 	statusMapping: HARDCOVER_STATUS_MAP,
-	targetFolder: "Books/Hardcover",
+	targetFolder: "HardcoverBooks",
 };

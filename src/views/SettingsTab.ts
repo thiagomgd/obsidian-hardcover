@@ -90,6 +90,23 @@ export default class SettingsTab extends PluginSettingTab {
 			);
 	}
 
+	private renderFolderSetting(containerEl: HTMLElement) {
+		new Setting(containerEl)
+			.setName("Target Folder")
+			.setDesc(
+				"The folder where book notes will be stored (will be created if it doesn't exist)"
+			)
+			.addText((text) => {
+				text
+					.setPlaceholder("HardcoverBooks")
+					.setValue(this.plugin.settings.targetFolder)
+					.onChange(async (value) => {
+						this.plugin.settings.targetFolder = value;
+						await this.plugin.saveSettings();
+					});
+			});
+	}
+
 	private renderSyncSetting(containerEl: HTMLElement) {
 		new Setting(containerEl)
 			.setName("Sync Hardcover library")
@@ -413,6 +430,7 @@ export default class SettingsTab extends PluginSettingTab {
 
 		this.renderApiTokenSetting(containerEl);
 		this.renderLastSyncTimestampSetting(containerEl);
+		this.renderFolderSetting(containerEl);
 		this.renderSyncSetting(containerEl);
 
 		// For debug purposes
