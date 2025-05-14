@@ -17,6 +17,8 @@ export interface PluginSettings {
 	statusMapping: {
 		[key: number]: string; // map hardcover status_id to custom string, will be put in array to allow for list type property in obsidian
 	};
+
+	targetFolder: string;
 }
 
 export interface FieldConfig {
@@ -55,38 +57,6 @@ export interface FieldsSettings {
 	lastRead: ActivityDateFieldConfig; // enabling firstRead/lastRead will create both start/end properties in the frontmatter
 	totalReads: FieldConfig;
 }
-
-export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
-	rating: { enabled: true, propertyName: "rating" },
-	status: { enabled: true, propertyName: "status" },
-
-	title: { enabled: true, propertyName: "title" },
-	cover: { enabled: true, propertyName: "cover" },
-	authors: { enabled: true, propertyName: "authors" },
-	contributors: { enabled: true, propertyName: "contributors" },
-	releaseDate: { enabled: true, propertyName: "releaseDate" },
-	url: { enabled: true, propertyName: "url" },
-
-	description: { enabled: true, propertyName: "description" },
-	genres: { enabled: true, propertyName: "genres" },
-	series: { enabled: true, propertyName: "series" },
-
-	publisher: { enabled: true, propertyName: "publisher" },
-
-	firstRead: {
-		enabled: true,
-		propertyName: "firstRead",
-		startPropertyName: "firstReadStart",
-		endPropertyName: "firstReadEnd",
-	},
-	lastRead: {
-		enabled: true,
-		propertyName: "lastRead",
-		startPropertyName: "lastReadStart",
-		endPropertyName: "lastReadEnd",
-	},
-	totalReads: { enabled: true, propertyName: "totalReads" },
-};
 
 export interface FieldDefinition {
 	key: keyof FieldsSettings;

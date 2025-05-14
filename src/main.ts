@@ -1,26 +1,12 @@
 import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { HardcoverAPI } from "src/api/HardcoverAPI";
 import SettingsTab from "./views/SettingsTab";
-import { DEFAULT_FIELDS_SETTINGS, PluginSettings } from "./types";
+import { PluginSettings } from "./types";
 import { SyncService } from "./services/SyncService";
 import { MetadataService } from "./services/MetadataService";
 import { FileUtils } from "./utils/FileUtils";
 import { NoteService } from "./services/NoteService";
-import { HARDCOVER_STATUS_MAP } from "./config";
-
-const DEFAULT_SETTINGS: PluginSettings = {
-	apiKey: "",
-	lastSyncTimestamp: "",
-	userId: null,
-	booksCount: null,
-	fieldsSettings: DEFAULT_FIELDS_SETTINGS,
-	dataSourcePreferences: {
-		titleSource: "edition",
-		coverSource: "edition",
-		releaseDateSource: "edition",
-	},
-	statusMapping: HARDCOVER_STATUS_MAP,
-};
+import { DEFAULT_SETTINGS } from "./config";
 
 export default class ObsidianHardcover extends Plugin {
 	settings: PluginSettings;
