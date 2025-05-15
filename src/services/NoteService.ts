@@ -15,9 +15,10 @@ export class NoteService {
 
 	async createNote(bookMetadata: any): Promise<TFile | null> {
 		try {
-			const { title, releaseYear } = this.getNoteTitleData(bookMetadata);
-
-			const filename = this.fileUtils.generateFilename(title, releaseYear);
+			const filename = this.fileUtils.processFilenameTemplate(
+				this.plugin.settings.filenameTemplate,
+				bookMetadata
+			);
 
 			const targetFolder = this.fileUtils.normalizePath(
 				this.plugin.settings.targetFolder
@@ -109,18 +110,6 @@ export class NoteService {
 			this.plugin.settings.fieldsSettings.title.propertyName;
 
 		return bookMetadata[titleProperty] || "Untitled";
-	}
-
-	private getNoteTitleData(bookMetadata: any) {
-		const title = this.getBookTitle(bookMetadata);
-		const releaseDateProperty =
-			this.plugin.settings.fieldsSettings.releaseDate.propertyName;
-
-		const releaseYear = bookMetadata[releaseDateProperty]
-			? new Date(bookMetadata.releaseDate).getFullYear()
-			: "";
-
-		return { title, releaseYear };
 	}
 
 	private async ensureFolderExists(folderPath: string): Promise<void> {

@@ -24,4 +24,30 @@ export class FileUtils {
 		const normalizedPath = this.normalizePath(path);
 		return !normalizedPath || normalizedPath === "/";
 	}
+
+	processFilenameTemplate(template: string, metadata: any): string {
+		let filename = template;
+
+		if (metadata.title) {
+			filename = filename.replace(/\${title}/g, metadata.title);
+		}
+
+		if (metadata.authors && Array.isArray(metadata.authors)) {
+			const authorsString = metadata.authors.join(", ");
+			filename = filename.replace(/\${authors}/g, authorsString);
+		}
+
+		if (metadata.releaseDate) {
+			try {
+				const year = new Date(metadata.releaseDate).getFullYear();
+				filename = filename.replace(/\${year}/g, year.toString());
+			} catch (error) {
+				console.error("Error extracting year from release date:", error);
+			}
+		}
+
+		// replace any unsupported template variables with empty string
+		filename = filename.replace(/\${[^}]+}/g, "");
+		return this.sanitizeFilename(filename) + ".md";
+	}
 }

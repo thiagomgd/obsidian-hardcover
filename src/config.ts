@@ -60,4 +60,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	},
 	statusMapping: HARDCOVER_STATUS_MAP,
 	targetFolder: "HardcoverBooks",
+	filenameTemplate: "${title} - (${year})",
 };

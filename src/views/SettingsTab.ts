@@ -1,5 +1,5 @@
 import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
-import { HARDCOVER_STATUS_MAP } from "src/config";
+import { DEFAULT_SETTINGS, HARDCOVER_STATUS_MAP } from "src/config";
 import ObsidianHardcover from "src/main";
 import {
 	ActivityDateFieldConfig,
@@ -421,6 +421,24 @@ export default class SettingsTab extends PluginSettingTab {
 		});
 	}
 
+	private renderFilenameTemplateSetting(containerEl: HTMLElement) {
+		new Setting(containerEl)
+			.setName("Filename template")
+			.setDesc(
+				"Pattern used to generate filenames. Available variables: ${title}, ${authors}, ${year}"
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder(DEFAULT_SETTINGS.filenameTemplate)
+					.setValue(this.plugin.settings.filenameTemplate)
+					.onChange(async (value) => {
+						this.plugin.settings.filenameTemplate =
+							value || DEFAULT_SETTINGS.filenameTemplate;
+						await this.plugin.saveSettings();
+					})
+			);
+	}
+
 	private renderDebugSettings(containerEl: HTMLElement) {
 		containerEl.createEl("h3", { text: "Debug Options" });
 
@@ -468,6 +486,7 @@ export default class SettingsTab extends PluginSettingTab {
 		this.renderApiTokenSetting(containerEl);
 		this.renderLastSyncTimestampSetting(containerEl);
 		this.renderFolderSetting(containerEl);
+		this.renderFilenameTemplateSetting(containerEl);
 		this.renderSyncSetting(containerEl);
 
 		// For debug purposes

@@ -19,6 +19,7 @@ export interface PluginSettings {
 	};
 
 	targetFolder: string;
+	filenameTemplate: string;
 }
 
 export interface FieldConfig {
