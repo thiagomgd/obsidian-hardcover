@@ -11,6 +11,7 @@ export default class SettingsTab extends PluginSettingTab {
 	plugin: ObsidianHardcover;
 	SYNC_CTA_LABEL: string;
 	debugBookLimit: number;
+	private syncButton: ButtonComponent | null = null;
 
 	constructor(app: App, plugin: ObsidianHardcover) {
 		super(app, plugin);
@@ -92,7 +93,7 @@ export default class SettingsTab extends PluginSettingTab {
 
 	private renderFolderSetting(containerEl: HTMLElement) {
 		new Setting(containerEl)
-			.setName("Target Folder")
+			.setName("Target Folder *")
 			.setDesc(
 				"The folder where book notes will be stored (will be created if it doesn't exist)"
 			)
@@ -103,35 +104,68 @@ export default class SettingsTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.targetFolder = value;
 						await this.plugin.saveSettings();
+
+						if (value) {
+							text.inputEl.removeClass("is-required");
+						} else {
+							text.inputEl.addClass("is-required");
+						}
+
+						// update the button state without rerendering
+						this.updateSyncButtonState();
 					});
+
+				const inputEl = text.inputEl;
+				if (!this.plugin.settings.targetFolder) {
+					inputEl.addClass("is-required");
+				}
 			});
 	}
 
 	private renderSyncSetting(containerEl: HTMLElement) {
-		new Setting(containerEl)
-			.setName("Sync Hardcover library")
-			.addButton((button: ButtonComponent) => {
-				button.setButtonText(this.SYNC_CTA_LABEL);
-				button.onClick(async () => {
-					// Show loading state
-					button.setButtonText("Syncing...");
-					button.setDisabled(true);
+		const setting = new Setting(containerEl).setName("Sync Hardcover library");
 
-					try {
-						await this.plugin.syncService.startSync();
+		setting.addButton((button) => {
+			// store the button reference
+			this.syncButton = button;
 
-						// Refresh the entire settings display after sync
-						this.display();
-					} catch (error) {
-						console.error("Sync failed:", error);
-					} finally {
-						// Reset button state
-						button.setButtonText(this.SYNC_CTA_LABEL);
-						button.setDisabled(false);
-					}
-				});
-				button.setCta();
+			button.setButtonText(this.SYNC_CTA_LABEL);
+			button.onClick(async () => {
+				// Show loading state
+				button.setButtonText("Syncing...");
+				button.setDisabled(true);
+
+				try {
+					await this.plugin.syncService.startSync();
+				} catch (error) {
+					console.error("Sync failed:", error);
+				} finally {
+					// Reset button state
+					button.setButtonText(this.SYNC_CTA_LABEL);
+					button.setDisabled(false);
+				}
 			});
+			button.setCta();
+
+			this.updateSyncButtonState();
+		});
+	}
+
+	private updateSyncButtonState() {
+		if (this.syncButton) {
+			const hasValidFolder = !!(
+				this.plugin.settings.targetFolder &&
+				this.plugin.settings.targetFolder.trim() !== ""
+			);
+
+			this.syncButton.setDisabled(!hasValidFolder);
+
+			if (!hasValidFolder) {
+				this.syncButton.setTooltip("Please specify a target folder first");
+			} else {
+				this.syncButton.setTooltip("");
+			}
+		}
 	}
 
 	private renderClearId(containerEl: HTMLElement) {

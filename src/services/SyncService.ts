@@ -12,6 +12,17 @@ export class SyncService {
 	}
 
 	async startSync(options: { debugLimit?: number } = {}) {
+		// ensure that a target folder is specified
+		if (
+			!this.plugin.settings.targetFolder ||
+			this.plugin.settings.targetFolder.trim() === ""
+		) {
+			new Notice(
+				"Please specify a target folder in the plugin settings before syncing."
+			);
+			return;
+		}
+
 		const isDebugMode = options.debugLimit !== undefined;
 
 		try {
