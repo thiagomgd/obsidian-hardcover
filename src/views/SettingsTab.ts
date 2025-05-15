@@ -425,7 +425,7 @@ export default class SettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Filename template")
 			.setDesc(
-				"Pattern used to generate filenames. Available variables: ${title}, ${authors}, ${year}"
+				"Pattern used to generate filenames. Available variables: ${title}, ${authors}, ${year}. Note: The variables ${authors} and ${year} will only work if you've enabled the Authors and Release Date fields in the settings below."
 			)
 			.addText((text) =>
 				text

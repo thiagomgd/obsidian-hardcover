@@ -54,6 +54,7 @@ export class NoteService {
 		existingFile: TFile
 	): Promise<TFile | null> {
 		try {
+			const originalPath = existingFile.path;
 			const existingContent = await this.vault.read(existingFile);
 
 			const frontmatter = this.createFrontmatter(bookMetadata);
@@ -76,10 +77,34 @@ export class NoteService {
 				updatedContent = newContent;
 			}
 
-			await this.vault.modify(existingFile, updatedContent);
-			console.log(`Updated note: ${existingFile.path}`);
+			// generate the new filename based on current template
+			const newFilename = this.fileUtils.processFilenameTemplate(
+				this.plugin.settings.filenameTemplate,
+				bookMetadata
+			);
 
-			return existingFile;
+			const targetFolder = this.fileUtils.normalizePath(
+				this.plugin.settings.targetFolder
+			);
+			const newPath = targetFolder
+				? `${targetFolder}/${newFilename}`
+				: newFilename;
+
+			// check if the file needs to be renamed
+			if (originalPath !== newPath) {
+				await this.vault.modify(existingFile, updatedContent);
+				await this.vault.rename(existingFile, newPath);
+
+				console.log(`Updated and renamed note: ${originalPath} -> ${newPath}`);
+
+				// get the new file reference after renaming
+				return this.vault.getAbstractFileByPath(newPath) as TFile;
+			} else {
+				await this.vault.modify(existingFile, updatedContent);
+				console.log(`Updated note: ${originalPath}`);
+
+				return existingFile;
+			}
 		} catch (error) {
 			console.error("Error updating note:", error);
 			return null;
