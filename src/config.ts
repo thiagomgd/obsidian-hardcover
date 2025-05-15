@@ -62,3 +62,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	targetFolder: "HardcoverBooks",
 	filenameTemplate: "${title} - (${year})",
 };
+
+export const CONTENT_DELIMITER = "<!-- obsidian-hardcover-plugin-end -->";

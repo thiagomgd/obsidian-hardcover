@@ -1,10 +1,9 @@
 import { TFile, Vault } from "obsidian";
+import { CONTENT_DELIMITER } from "src/config";
 import ObsidianHardcover from "src/main";
 import { FileUtils } from "src/utils/FileUtils";
 
 export class NoteService {
-	private readonly CONTENT_DELIMITER = "<!-- obsidian-hardcover-plugin-end -->";
-
 	constructor(
 		private vault: Vault,
 		private fileUtils: FileUtils,
@@ -60,18 +59,18 @@ export class NoteService {
 			const frontmatter = this.createFrontmatter(bookMetadata);
 			const newContent = this.createNoteContent(frontmatter, bookMetadata);
 			// check if the delimiter exists in the current content
-			const delimiterIndex = existingContent.indexOf(this.CONTENT_DELIMITER);
+			const delimiterIndex = existingContent.indexOf(CONTENT_DELIMITER);
 
 			let updatedContent: string;
 			if (delimiterIndex !== -1) {
 				// preserve original content after it
 				const userContent = existingContent.substring(
-					delimiterIndex + this.CONTENT_DELIMITER.length
+					delimiterIndex + CONTENT_DELIMITER.length
 				);
 
 				updatedContent = newContent.replace(
-					`${this.CONTENT_DELIMITER}\n\n`,
-					`${this.CONTENT_DELIMITER}${userContent}`
+					`${CONTENT_DELIMITER}\n\n`,
+					`${CONTENT_DELIMITER}${userContent}`
 				);
 			} else {
 				updatedContent = newContent;
@@ -125,7 +124,7 @@ export class NoteService {
 		}
 
 		// add obsidian-hardcover plugin delimiter
-		content += `\n${this.CONTENT_DELIMITER}\n\n`;
+		content += `\n${CONTENT_DELIMITER}\n\n`;
 
 		return content;
 	}
