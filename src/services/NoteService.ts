@@ -3,6 +3,8 @@ import ObsidianHardcover from "src/main";
 import { FileUtils } from "src/utils/FileUtils";
 
 export class NoteService {
+	private readonly CONTENT_DELIMITER = "<!-- obsidian-hardcover-plugin-end -->";
+
 	constructor(
 		private vault: Vault,
 		private fileUtils: FileUtils,
@@ -23,11 +25,9 @@ export class NoteService {
 			await this.ensureFolderExists(targetFolder);
 			const fullPath = targetFolder ? `${targetFolder}/${filename}` : filename;
 
-			// create frontmatter
+			// create frontmatter and full note content with delimiter
 			const frontmatter = this.createFrontmatter(bookMetadata);
-
-			// TODO: create full note content
-			const noteContent = this.getFrontmatterString(frontmatter, title);
+			const noteContent = this.createNoteContent(frontmatter, bookMetadata);
 
 			let file;
 			if (await this.vault.adapter.exists(fullPath)) {
@@ -53,12 +53,29 @@ export class NoteService {
 		existingFile: TFile
 	): Promise<TFile | null> {
 		try {
+			const existingContent = await this.vault.read(existingFile);
+
 			const frontmatter = this.createFrontmatter(bookMetadata);
-			const title = this.getBookTitle(bookMetadata);
+			const newContent = this.createNoteContent(frontmatter, bookMetadata);
+			// check if the delimiter exists in the current content
+			const delimiterIndex = existingContent.indexOf(this.CONTENT_DELIMITER);
 
-			const noteContent = this.getFrontmatterString(frontmatter, title);
+			let updatedContent: string;
+			if (delimiterIndex !== -1) {
+				// preserve original content after it
+				const userContent = existingContent.substring(
+					delimiterIndex + this.CONTENT_DELIMITER.length
+				);
 
-			await this.vault.modify(existingFile, noteContent);
+				updatedContent = newContent.replace(
+					`${this.CONTENT_DELIMITER}\n\n`,
+					`${this.CONTENT_DELIMITER}${userContent}`
+				);
+			} else {
+				updatedContent = newContent;
+			}
+
+			await this.vault.modify(existingFile, updatedContent);
 			console.log(`Updated note: ${existingFile.path}`);
 
 			return existingFile;
@@ -66,6 +83,25 @@ export class NoteService {
 			console.error("Error updating note:", error);
 			return null;
 		}
+	}
+
+	private createNoteContent(frontmatter: string, bookMetadata: any): string {
+		const title = this.getBookTitle(bookMetadata);
+		let content = this.getFrontmatterString(frontmatter, title);
+
+		// add book cover if enabled
+		if (this.plugin.settings.fieldsSettings.cover.enabled) {
+			const coverProperty =
+				this.plugin.settings.fieldsSettings.cover.propertyName;
+			if (bookMetadata[coverProperty]) {
+				content += `\n![${title} Cover](${bookMetadata[coverProperty]})\n`;
+			}
+		}
+
+		// add obsidian-hardcover plugin delimiter
+		content += `\n${this.CONTENT_DELIMITER}\n\n`;
+
+		return content;
 	}
 
 	private getBookTitle(bookMetadata: any) {
