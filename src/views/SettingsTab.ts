@@ -92,34 +92,36 @@ export default class SettingsTab extends PluginSettingTab {
 	}
 
 	private renderFolderSetting(containerEl: HTMLElement) {
-		new Setting(containerEl)
+		const baseDesc =
+			"The folder where book notes will be stored (required, will be created if it doesn't exist)";
+
+		const setting = new Setting(containerEl)
 			.setName("Target Folder *")
-			.setDesc(
-				"The folder where book notes will be stored (will be created if it doesn't exist)"
-			)
-			.addText((text) => {
-				text
-					.setPlaceholder("HardcoverBooks")
-					.setValue(this.plugin.settings.targetFolder)
-					.onChange(async (value) => {
-						this.plugin.settings.targetFolder = value;
-						await this.plugin.saveSettings();
+			.setDesc(baseDesc);
 
-						if (value) {
-							text.inputEl.removeClass("is-required");
-						} else {
-							text.inputEl.addClass("is-required");
-						}
+		setting.addText((text) => {
+			text
+				.setPlaceholder("HardcoverBooks")
+				.setValue(this.plugin.settings.targetFolder)
+				.onChange(async (value) => {
+					const isRootOrEmpty = this.plugin.fileUtils.isRootOrEmpty(value);
 
-						// update the button state without rerendering
-						this.updateSyncButtonState();
-					});
+					if (isRootOrEmpty) {
+						text.inputEl.addClass("has-error");
+						setting.setDesc(
+							`${baseDesc} - Please specify a subfolder. Using the vault root is not allowed.`
+						);
+					} else {
+						text.inputEl.removeClass("has-error");
+						setting.setDesc(baseDesc);
+					}
 
-				const inputEl = text.inputEl;
-				if (!this.plugin.settings.targetFolder) {
-					inputEl.addClass("is-required");
-				}
-			});
+					this.plugin.settings.targetFolder = value;
+					await this.plugin.saveSettings();
+
+					this.updateSyncButtonState();
+				});
+		});
 	}
 
 	private renderSyncSetting(containerEl: HTMLElement) {
@@ -153,15 +155,16 @@ export default class SettingsTab extends PluginSettingTab {
 
 	private updateSyncButtonState() {
 		if (this.syncButton) {
-			const hasValidFolder = !!(
-				this.plugin.settings.targetFolder &&
-				this.plugin.settings.targetFolder.trim() !== ""
-			);
+			const value = this.plugin.settings.targetFolder;
 
-			this.syncButton.setDisabled(!hasValidFolder);
+			const isRootOrEmpty = this.plugin.fileUtils.isRootOrEmpty(value);
 
-			if (!hasValidFolder) {
-				this.syncButton.setTooltip("Please specify a target folder first");
+			this.syncButton.setDisabled(isRootOrEmpty);
+
+			if (isRootOrEmpty) {
+				this.syncButton.setTooltip(
+					"Please specify a target folder. Using the vault root is not allowed"
+				);
 			} else {
 				this.syncButton.setTooltip("");
 			}
@@ -476,5 +479,7 @@ export default class SettingsTab extends PluginSettingTab {
 
 		// Field settings
 		this.renderFieldSettings(containerEl);
+
+		console.log(this.plugin.settings.targetFolder);
 	}
 }

@@ -19,4 +19,9 @@ export class FileUtils {
 		normalized = normalized.replace(/\/+/g, "/");
 		return normalized;
 	}
+
+	isRootOrEmpty(path: string): boolean {
+		const normalizedPath = this.normalizePath(path);
+		return !normalizedPath || normalizedPath === "/";
+	}
 }

@@ -56,7 +56,7 @@ export default class ObsidianHardcover extends Plugin {
 		.obhc-settings .mod-toggle {
 			border: none;
 		}
-		.obhc-settings .is-required {
+		.obhc-settings .has-error {
 			border-color: var(--text-error) !important;
 		}
   `;

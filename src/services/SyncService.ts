@@ -12,13 +12,11 @@ export class SyncService {
 	}
 
 	async startSync(options: { debugLimit?: number } = {}) {
-		// ensure that a target folder is specified
-		if (
-			!this.plugin.settings.targetFolder ||
-			this.plugin.settings.targetFolder.trim() === ""
-		) {
+		const targetFolder = this.plugin.settings.targetFolder;
+
+		if (this.plugin.fileUtils.isRootOrEmpty(targetFolder)) {
 			new Notice(
-				"Please specify a target folder in the plugin settings before syncing."
+				"Please specify a subfolder for your Hardcover books. Using the vault root is not supported."
 			);
 			return;
 		}
