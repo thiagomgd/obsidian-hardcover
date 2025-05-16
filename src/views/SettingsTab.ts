@@ -45,7 +45,9 @@ export default class SettingsTab extends PluginSettingTab {
 		renderSyncDelimiterNote(containerEl);
 
 		// API section
-		renderApiTokenSetting(containerEl, this.plugin, () => this.display());
+		renderApiTokenSetting(containerEl, this.plugin, () =>
+			this.updateSyncButtonsState()
+		);
 
 		// files section
 		renderFolderSetting(containerEl, this.plugin, () =>

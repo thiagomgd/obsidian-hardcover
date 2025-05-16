@@ -6,6 +6,8 @@ export function renderApiTokenSetting(
 	plugin: ObsidianHardcover,
 	onSettingsChanged: () => void
 ): void {
+	let textComponent: any;
+
 	new Setting(containerEl)
 		.setName("Hardcover API key")
 		.setDesc("Get your API key from https://hardcover.app/account/api")
@@ -16,16 +18,25 @@ export function renderApiTokenSetting(
 				.onClick(async () => {
 					plugin.settings.apiKey = "";
 					await plugin.saveSettings();
+
+					// update the text field value
+					if (textComponent) {
+						textComponent.setValue("");
+					}
+
 					onSettingsChanged();
 				});
 		})
-		.addText((text) =>
+		.addText((text) => {
+			textComponent = text;
+
 			text
 				.setPlaceholder("Enter your API key")
 				.setValue(plugin.settings.apiKey)
 				.onChange(async (value) => {
 					plugin.settings.apiKey = value;
 					await plugin.saveSettings();
-				})
-		);
+					onSettingsChanged();
+				});
+		});
 }
