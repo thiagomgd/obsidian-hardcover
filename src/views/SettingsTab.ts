@@ -1,5 +1,5 @@
 import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
-import { DEFAULT_SETTINGS, HARDCOVER_STATUS_MAP } from "src/config";
+import { CONTENT_DELIMITER, HARDCOVER_STATUS_MAP } from "src/config";
 import ObsidianHardcover from "src/main";
 import {
 	ActivityDateFieldConfig,
@@ -13,6 +13,8 @@ export default class SettingsTab extends PluginSettingTab {
 	debugBookLimit: number;
 	private syncButton: ButtonComponent | null = null;
 
+	private isDev = true; // TODO: detect dev mode
+
 	constructor(app: App, plugin: ObsidianHardcover) {
 		super(app, plugin);
 		this.plugin = plugin;
@@ -20,8 +22,38 @@ export default class SettingsTab extends PluginSettingTab {
 		this.debugBookLimit = 1;
 	}
 
-	// TODO: improve UI labels and descriptions
-	// TODO: extract all text to variables
+	display(): void {
+		const { containerEl } = this;
+		containerEl.empty();
+		containerEl.addClass("obhc-settings");
+
+		// API section
+		containerEl.createEl("h2", { text: "API Configuration" });
+		this.renderApiTokenSetting(containerEl);
+
+		// files section
+		containerEl.createEl("h2", { text: "File Organization" });
+		this.renderFolderSetting(containerEl);
+		this.renderFilenameTemplateSetting(containerEl);
+
+		// sync section
+		containerEl.createEl("h2", { text: "Synchronization" });
+		this.renderLastSyncTimestampSetting(containerEl);
+		this.renderSyncSetting(containerEl);
+
+		// fields section
+		containerEl.createEl("h2", { text: "Data Fields" });
+		this.renderFieldSettings(containerEl);
+
+		// sebug section, always show basic info, conditionally show dev options
+		containerEl.createEl("h2", { text: "Debug Information" });
+		this.renderBasicDebugInfo(containerEl);
+
+		// show developer options in dev mode
+		if (this.isDev) {
+			this.renderDevOptions(containerEl);
+		}
+	}
 
 	private renderApiTokenSetting(containerEl: HTMLElement) {
 		new Setting(containerEl)
@@ -38,54 +70,19 @@ export default class SettingsTab extends PluginSettingTab {
 			);
 	}
 
-	private renderUserIdSetting(containerEl: HTMLElement) {
-		const userIdSetting = new Setting(containerEl)
-			.setName("Hardcover user ID")
-			.setDesc(
-				this.plugin.settings.userId
-					? "Your Hardcover user ID has been retrieved."
-					: "Your Hardcover user ID. It will be added automatically when you first run the synchronization."
-			);
-
-		if (this.plugin.settings.userId) {
-			userIdSetting.addText((text) =>
-				text.setValue(String(this.plugin.settings.userId)).setDisabled(true)
-			);
-		} else {
-			userIdSetting.addText((text) =>
-				text.setPlaceholder("1234").setDisabled(true)
-			);
-		}
-	}
-
-	private renderBooksCountSetting(containerEl: HTMLElement) {
-		const userIdSetting = new Setting(containerEl)
-			.setName("Hardcover Books Count")
-			.setDesc("Your total count of books on Hardcover - used for pagination");
-
-		if (this.plugin.settings.booksCount) {
-			userIdSetting.addText((text) =>
-				text.setValue(String(this.plugin.settings.booksCount)).setDisabled(true)
-			);
-		} else {
-			userIdSetting.addText((text) =>
-				text.setPlaceholder("1234").setDisabled(true)
-			);
-		}
-	}
-
-	private renderLastSyncTimestampSetting(containerEl: HTMLElement) {
+	private renderFilenameTemplateSetting(containerEl: HTMLElement) {
 		new Setting(containerEl)
-			.setName("Last Sync Timestamp")
+			.setName("Filename template")
 			.setDesc(
-				"The timestamp relative to when the last synchronization was run. Format: YYYY-MM-DD'T'HH:mm:ss.SSSSSSXXX" // TODO: explain how timestamp is used in filters
+				"Pattern used to generate filenames. Available variables: ${title}, ${authors}, ${year}. Note: The variables ${authors} and ${year} will only work if you've enabled the Authors and Release Date fields in the settings below."
 			)
 			.addText((text) =>
 				text
-					.setPlaceholder("YYYY-MM-DD'T'HH:mm:ss.SSSSSSXXX")
-					.setValue(this.plugin.settings.lastSyncTimestamp || "")
+					.setPlaceholder("${title} - ${year}")
+					.setValue(this.plugin.settings.filenameTemplate)
 					.onChange(async (value) => {
-						this.plugin.settings.lastSyncTimestamp = value;
+						this.plugin.settings.filenameTemplate =
+							value || "${title} - ${year}";
 						await this.plugin.saveSettings();
 					})
 			);
@@ -124,8 +121,27 @@ export default class SettingsTab extends PluginSettingTab {
 		});
 	}
 
+	private renderLastSyncTimestampSetting(containerEl: HTMLElement) {
+		new Setting(containerEl)
+			.setName("Last Sync Timestamp")
+			.setDesc(
+				"The timestamp relative to when the last synchronization was run. Format: YYYY-MM-DD'T'HH:mm:ss.SSSSSSXXX" // TODO: explain how timestamp is used in filters
+			)
+			.addText((text) =>
+				text
+					.setPlaceholder("YYYY-MM-DD'T'HH:mm:ss.SSSSSSXXX")
+					.setValue(this.plugin.settings.lastSyncTimestamp || "")
+					.onChange(async (value) => {
+						this.plugin.settings.lastSyncTimestamp = value;
+						await this.plugin.saveSettings();
+					})
+			);
+	}
+
 	private renderSyncSetting(containerEl: HTMLElement) {
-		const setting = new Setting(containerEl).setName("Sync Hardcover library");
+		const setting = new Setting(containerEl)
+			.setName("Sync Hardcover library")
+			.setDesc("Sync your Hardcover books to Obsidian notes");
 
 		setting.addButton((button) => {
 			// store the button reference
@@ -151,6 +167,14 @@ export default class SettingsTab extends PluginSettingTab {
 
 			this.updateSyncButtonState();
 		});
+
+		containerEl.createEl("div", {
+			text: `Note: Content below the ${CONTENT_DELIMITER} delimiter in your notes will be preserved during syncs. It's still recommended to maintain backups of your vault.`,
+			cls: "setting-item-description",
+			attr: {
+				style: "font-style: italic;",
+			},
+		});
 	}
 
 	private updateSyncButtonState() {
@@ -171,27 +195,73 @@ export default class SettingsTab extends PluginSettingTab {
 		}
 	}
 
-	private renderClearId(containerEl: HTMLElement) {
+	private renderBasicDebugInfo(containerEl: HTMLElement) {
 		new Setting(containerEl)
-			.setName("DEBUG: clear user id")
-			.addButton((button: ButtonComponent) => {
-				button.setButtonText("Clear");
+			.setName("User ID")
+			.setDesc("Your Hardcover user ID (used for API calls)")
+			.addText((text) =>
+				text
+					.setValue(
+						this.plugin.settings.userId
+							? String(this.plugin.settings.userId)
+							: "Not set"
+					)
+					.setDisabled(true)
+			);
+
+		new Setting(containerEl)
+			.setName("Books Count")
+			.setDesc("Total number of books in your Hardcover library")
+			.addText((text) =>
+				text
+					.setValue(
+						this.plugin.settings.booksCount
+							? String(this.plugin.settings.booksCount)
+							: "Unknown"
+					)
+					.setDisabled(true)
+			);
+	}
+
+	private renderDevOptions(containerEl: HTMLElement) {
+		containerEl.createEl("h3", { text: "Developer Options" });
+
+		new Setting(containerEl)
+			.setName("Debug Sync")
+			.setDesc("Run a sync with limited number of books")
+			.addText((text) =>
+				text
+					.setPlaceholder("1")
+					.setValue(String(this.debugBookLimit))
+					.onChange((value) => {
+						this.debugBookLimit = parseInt(value) || 1;
+					})
+			)
+			.addButton((button) => {
+				button.setButtonText("Run Debug Sync");
 				button.onClick(async () => {
-					this.plugin.settings.userId = null;
-					await this.plugin.saveSettings();
-					// Refresh to show changes
-					this.display();
+					button.setButtonText("Syncing...");
+					button.setDisabled(true);
+
+					try {
+						await this.plugin.syncService.startSync({
+							debugLimit: this.debugBookLimit,
+						});
+						this.display();
+					} catch (error) {
+						console.error("Debug sync failed:", error);
+					} finally {
+						button.setButtonText("Run Debug Sync");
+						button.setDisabled(false);
+					}
 				});
-				button.setCta();
 			});
 	}
 
 	private renderFieldSettings(containerEl: HTMLElement) {
-		containerEl.createEl("h2", { text: "Configuration" });
 		containerEl.createEl("p", {
-			text: "Decide what data you want to retrieve from Hardcover to populate the frontmatter properties of your notes.",
+			text: "Configure which data to include in your book notes.",
 		});
-		containerEl.createEl("hr", { cls: "field-separator" });
 
 		const fields: FieldDefinition[] = [
 			{
@@ -419,86 +489,5 @@ export default class SettingsTab extends PluginSettingTab {
 						})
 				);
 		});
-	}
-
-	private renderFilenameTemplateSetting(containerEl: HTMLElement) {
-		new Setting(containerEl)
-			.setName("Filename template")
-			.setDesc(
-				"Pattern used to generate filenames. Available variables: ${title}, ${authors}, ${year}. Note: The variables ${authors} and ${year} will only work if you've enabled the Authors and Release Date fields in the settings below."
-			)
-			.addText((text) =>
-				text
-					.setPlaceholder(DEFAULT_SETTINGS.filenameTemplate)
-					.setValue(this.plugin.settings.filenameTemplate)
-					.onChange(async (value) => {
-						this.plugin.settings.filenameTemplate =
-							value || DEFAULT_SETTINGS.filenameTemplate;
-						await this.plugin.saveSettings();
-					})
-			);
-	}
-
-	private renderDebugSettings(containerEl: HTMLElement) {
-		containerEl.createEl("h3", { text: "Debug Options" });
-
-		new Setting(containerEl)
-			.setName("Debug: Sync with limited books")
-			.setDesc("Run the sync with only a few books to test the full process")
-			.addText((text) =>
-				text
-					.setPlaceholder("1")
-					.setValue(String(this.debugBookLimit))
-					.onChange(async (value) => {
-						this.debugBookLimit = parseInt(value) || 1;
-					})
-			)
-			.addButton((button) => {
-				button.setButtonText("Debug Sync");
-				button.onClick(async () => {
-					// Show loading state
-					button.setButtonText("Syncing...");
-					button.setDisabled(true);
-
-					try {
-						await this.plugin.syncService.startSync({
-							debugLimit: this.debugBookLimit,
-						});
-						this.display();
-					} catch (error) {
-						console.error("Debug sync failed:", error);
-					} finally {
-						// Reset button state
-						button.setButtonText("Debug Sync");
-						button.setDisabled(false);
-					}
-				});
-			});
-	}
-
-	display(): void {
-		const { containerEl } = this;
-
-		containerEl.empty();
-
-		containerEl.addClass("obhc-settings");
-
-		this.renderApiTokenSetting(containerEl);
-		this.renderLastSyncTimestampSetting(containerEl);
-		this.renderFolderSetting(containerEl);
-		this.renderFilenameTemplateSetting(containerEl);
-		this.renderSyncSetting(containerEl);
-
-		// For debug purposes
-		// TODO: evaluate if setting to toggle debug mode and display these settings can be useful
-		this.renderUserIdSetting(containerEl);
-		this.renderBooksCountSetting(containerEl);
-		this.renderClearId(containerEl);
-		this.renderDebugSettings(containerEl);
-
-		// Field settings
-		this.renderFieldSettings(containerEl);
-
-		console.log(this.plugin.settings.targetFolder);
 	}
 }
