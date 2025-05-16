@@ -25,8 +25,6 @@ export default class SettingsTab extends PluginSettingTab {
 	debugBookLimit: number;
 	private syncButtons: ButtonComponent[] = [];
 
-	private isDev = true; // TODO: detect dev mode
-
 	constructor(app: App, plugin: ObsidianHardcover) {
 		super(app, plugin);
 		this.plugin = plugin;
@@ -43,6 +41,17 @@ export default class SettingsTab extends PluginSettingTab {
 		this.syncButtons = [];
 
 		containerEl.createEl("h2", { text: "Obsidian Hardcover Plugin" });
+
+		// sync button
+		this.addSyncButton({
+			containerEl: containerEl,
+			name: "Sync Hardcover library",
+			description:
+				"Sync your Hardcover books to Obsidian notes. For testing, you can sync a limited number of books in the Debug section below.",
+			buttonText: this.SYNC_CTA_LABEL,
+			isMainCTA: true,
+		});
+
 		// API section
 		this.renderApiTokenSetting(containerEl);
 
@@ -53,14 +62,6 @@ export default class SettingsTab extends PluginSettingTab {
 		// sync section
 		this.renderLastSyncTimestampSetting(containerEl);
 
-		this.addSyncButton({
-			containerEl: containerEl,
-			name: "Sync Hardcover library",
-			description: "Sync your Hardcover books to Obsidian notes",
-			buttonText: this.SYNC_CTA_LABEL,
-			isMainCTA: true,
-		});
-
 		containerEl.createEl("div", {
 			text: `Note: Content below the ${CONTENT_DELIMITER} delimiter in your notes will be preserved during syncs. It's still recommended to maintain backups of your vault.`,
 			cls: "setting-item-description",
@@ -69,17 +70,22 @@ export default class SettingsTab extends PluginSettingTab {
 			},
 		});
 
+		containerEl.createEl("hr");
+
 		// fields section
-		containerEl.createEl("h2", { text: "Data Fields" });
+		containerEl.createEl("h2", {
+			text: "Configure the data to include in your book notes.",
+		});
 		this.renderFieldSettings(containerEl);
 
+		containerEl.createEl("hr");
+
 		// debug section
-		containerEl.createEl("h2", { text: "Debug Information" });
 		this.renderDebugInfo(containerEl);
 
 		// show developer options in dev mode
 		if (IS_DEV) {
-			containerEl.createEl("h3", { text: "Developer Options" });
+			containerEl.createEl("h2", { text: "Developer Options" });
 			this.renderDevOptions(containerEl);
 		}
 	}
@@ -451,10 +457,6 @@ export default class SettingsTab extends PluginSettingTab {
 	}
 
 	private renderFieldSettings(containerEl: HTMLElement) {
-		containerEl.createEl("p", {
-			text: "Configure which data to include in your book notes.",
-		});
-
 		const fields: FieldDefinition[] = [
 			{
 				key: "title",
