@@ -226,35 +226,58 @@ export default class SettingsTab extends PluginSettingTab {
 	private renderDevOptions(containerEl: HTMLElement) {
 		containerEl.createEl("h3", { text: "Developer Options" });
 
-		new Setting(containerEl)
+		const debugSyncSetting = new Setting(containerEl)
 			.setName("Debug Sync")
 			.setDesc("Run a sync with limited number of books")
-			.addText((text) =>
+			.addText((text) => {
 				text
 					.setPlaceholder("1")
 					.setValue(String(this.debugBookLimit))
 					.onChange((value) => {
 						this.debugBookLimit = parseInt(value) || 1;
-					})
-			)
-			.addButton((button) => {
-				button.setButtonText("Run Debug Sync");
-				button.onClick(async () => {
-					button.setButtonText("Syncing...");
-					button.setDisabled(true);
+					});
 
-					try {
-						await this.plugin.syncService.startSync({
-							debugLimit: this.debugBookLimit,
-						});
-						this.display();
-					} catch (error) {
-						console.error("Debug sync failed:", error);
-					} finally {
-						button.setButtonText("Run Debug Sync");
-						button.setDisabled(false);
-					}
-				});
+				text.inputEl.style.width = "50px";
+				text.inputEl.style.textAlign = "center";
+			});
+
+		debugSyncSetting.addButton((button) => {
+			button.setButtonText("Run");
+			button.onClick(async () => {
+				button.setButtonText("Syncing...");
+				button.setDisabled(true);
+
+				try {
+					await this.plugin.syncService.startSync({
+						debugLimit: this.debugBookLimit,
+					});
+					this.display();
+				} catch (error) {
+					console.error("Debug sync failed:", error);
+				} finally {
+					button.setButtonText("Run");
+					button.setDisabled(false);
+				}
+			});
+		});
+
+		new Setting(containerEl)
+			.setName("Reset Plugin")
+			.setDesc("Reset plugin settings to defaults")
+			.addButton((button) => {
+				button
+					.setButtonText("Reset Settings")
+					.setWarning()
+					.onClick(async () => {
+						const confirmed = confirm(
+							"Are you sure you want to reset all plugin settings to defaults? This cannot be undone."
+						);
+
+						if (confirmed) {
+							await this.plugin.resetSettings();
+							this.display();
+						}
+					});
 			});
 	}
 
