@@ -71,7 +71,6 @@ export default class ObsidianHardcover extends Plugin {
     .obhc-debug-details {
       margin-top: 1rem;
       border: 1px solid var(--background-modifier-border);
-      border-radius: 4px;
       padding: 0.5rem;
       margin-bottom: 1rem;
     }
@@ -83,23 +82,23 @@ export default class ObsidianHardcover extends Plugin {
     
     .obhc-debug-content {
       margin-top: 0.5rem;
-      padding-left: 0.5rem;
     }
     
     .obhc-debug-info-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
       margin-bottom: 1rem;
       padding: 0.5rem;
       background-color: var(--background-secondary);
-      border-radius: 4px;
     }
     
     .obhc-debug-info-item {
       font-family: var(--font-monospace);
       font-size: 0.9em;
     }
+
+		.obhc-test-sync input {
+			width: 50px;
+			text-align: center;
+		}
   `;
 		document.head.appendChild(styleEl);
 	}

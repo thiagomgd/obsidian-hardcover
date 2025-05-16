@@ -235,6 +235,7 @@ export default class SettingsTab extends PluginSettingTab {
 			.setDesc(
 				"Sync a limited number of books to test the plugin before doing a full sync"
 			)
+			.setClass("obhc-test-sync")
 			.addText((text) => {
 				text
 					.setPlaceholder("1")
@@ -242,9 +243,6 @@ export default class SettingsTab extends PluginSettingTab {
 					.onChange((value) => {
 						this.debugBookLimit = parseInt(value) || 1;
 					});
-
-				text.inputEl.style.width = "50px";
-				text.inputEl.style.textAlign = "center";
 			});
 
 		testSyncSetting.addButton((button) => {
