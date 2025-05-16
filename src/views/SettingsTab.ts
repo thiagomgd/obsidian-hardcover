@@ -91,6 +91,18 @@ export default class SettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Hardcover API key")
 			.setDesc("Get your API key from https://hardcover.app/account/api")
+
+			.addExtraButton((button) => {
+				button
+					.setIcon("refresh-cw")
+					.setTooltip("Clear API key")
+					.onClick(async () => {
+						this.plugin.settings.apiKey = "";
+						await this.plugin.saveSettings();
+						this.display();
+						this.updateSyncButtonsState();
+					});
+			})
 			.addText((text) =>
 				text
 					.setPlaceholder("Enter your API key")
@@ -161,6 +173,16 @@ export default class SettingsTab extends PluginSettingTab {
 				"When provided, only books updated on Hardcover after this timestamp will be synced. Leave empty to sync your entire library. Example format: 2025-01-01T18:30:35.519934+00:00"
 			)
 
+			.addExtraButton((button) => {
+				button
+					.setIcon("refresh-cw")
+					.setTooltip("Reset timestamp (will force full sync)")
+					.onClick(async () => {
+						this.plugin.settings.lastSyncTimestamp = "";
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			})
 			.addText((text) =>
 				text
 					.setPlaceholder("YYYY-MM-DD'T'HH:mm:ss.SSSSSSXXX")
