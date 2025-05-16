@@ -1,4 +1,5 @@
 import { Setting } from "obsidian";
+import { DEFAULT_FILENAME_FORMAT } from "src/config/defaultSettings";
 import ObsidianHardcover from "src/main";
 
 export function renderFilenameTemplateSetting(
@@ -12,10 +13,10 @@ export function renderFilenameTemplateSetting(
 		)
 		.addText((text) =>
 			text
-				.setPlaceholder("${title} - ${year}")
+				.setPlaceholder(DEFAULT_FILENAME_FORMAT)
 				.setValue(plugin.settings.filenameTemplate)
 				.onChange(async (value) => {
-					plugin.settings.filenameTemplate = value || "${title} - ${year}";
+					plugin.settings.filenameTemplate = value || DEFAULT_FILENAME_FORMAT;
 					await plugin.saveSettings();
 				})
 		);

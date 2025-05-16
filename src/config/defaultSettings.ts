@@ -33,6 +33,8 @@ export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
 	totalReads: { enabled: true, propertyName: "totalReads" },
 };
 
+export const DEFAULT_FILENAME_FORMAT = "${title} - (${year})";
+
 export const DEFAULT_SETTINGS: PluginSettings = {
 	apiKey: "",
 	lastSyncTimestamp: "",
@@ -46,5 +48,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	},
 	statusMapping: HARDCOVER_STATUS_MAP,
 	targetFolder: "HardcoverBooks",
-	filenameTemplate: "${title} - (${year})",
+	filenameTemplate: DEFAULT_FILENAME_FORMAT,
 };
