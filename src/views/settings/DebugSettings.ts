@@ -7,7 +7,8 @@ export function renderDebugInfo(
 	plugin: ObsidianHardcover,
 	debugBookLimit: number,
 	updateSyncButtonsState: () => void,
-	onDebugLimitChanged: (limit: number) => void
+	onDebugLimitChanged: (limit: number) => void,
+	onSyncComplete: () => void
 ): ButtonComponent {
 	const debugDetails = containerEl.createEl("details", {
 		cls: "obhc-debug-details",
@@ -50,6 +51,7 @@ export function renderDebugInfo(
 		settingClassName: "obhc-test-sync",
 		updateSyncButtonsState: updateSyncButtonsState,
 		onDebugLimitChanged: onDebugLimitChanged,
+		onSyncComplete: onSyncComplete,
 	});
 
 	return button;

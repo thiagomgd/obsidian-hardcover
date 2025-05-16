@@ -14,6 +14,7 @@ export interface SyncButtonConfig {
 	settingClassName?: string;
 	isMainCTA?: boolean;
 	updateSyncButtonsState: () => void;
+	onSyncComplete?: () => void;
 }
 
 export function addSyncButton(config: SyncButtonConfig): ButtonComponent {
@@ -29,6 +30,7 @@ export function addSyncButton(config: SyncButtonConfig): ButtonComponent {
 		settingClassName,
 		isMainCTA = false,
 		updateSyncButtonsState,
+		onSyncComplete,
 	} = config;
 
 	const setting = new Setting(containerEl).setName(name).setDesc(description);
@@ -65,6 +67,9 @@ export function addSyncButton(config: SyncButtonConfig): ButtonComponent {
 			try {
 				const options = limitInputValue ? { debugLimit: limitInputValue } : {};
 				await plugin.syncService.startSync(options);
+				if (onSyncComplete) {
+					onSyncComplete();
+				}
 			} catch (error) {
 				console.error("Sync failed:", error);
 			} finally {
