@@ -7,6 +7,7 @@ import {
 	FieldsSettings,
 } from "src/types";
 import { Accordion } from "../ui/Accordion";
+import { renderStatusMappingSettings } from "./StatusMappingSettings";
 
 export function renderFieldSettings(
 	containerEl: HTMLElement,

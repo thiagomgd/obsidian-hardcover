@@ -3,7 +3,8 @@ import ObsidianHardcover from "src/main";
 
 export function renderApiTokenSetting(
 	containerEl: HTMLElement,
-	plugin: ObsidianHardcover
+	plugin: ObsidianHardcover,
+	onSettingsChanged: () => void
 ): void {
 	new Setting(containerEl)
 		.setName("Hardcover API key")
@@ -15,6 +16,7 @@ export function renderApiTokenSetting(
 				.onClick(async () => {
 					plugin.settings.apiKey = "";
 					await plugin.saveSettings();
+					onSettingsChanged();
 				});
 		})
 		.addText((text) =>
