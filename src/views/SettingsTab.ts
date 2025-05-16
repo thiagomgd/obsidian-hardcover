@@ -101,6 +101,7 @@ export default class SettingsTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						this.plugin.settings.apiKey = value;
 						await this.plugin.saveSettings();
+						this.updateSyncButtonsState();
 					})
 			);
 	}
@@ -251,16 +252,26 @@ export default class SettingsTab extends PluginSettingTab {
 		const targetFolder = this.plugin.settings.targetFolder;
 		const isRootOrEmpty = this.plugin.fileUtils.isRootOrEmpty(targetFolder);
 
-		for (const button of this.syncButtons) {
-			button.setDisabled(isRootOrEmpty);
+		const apiKey = this.plugin.settings.apiKey;
+		const isApiKeyMissing = !apiKey || apiKey.trim() === "";
 
-			if (isRootOrEmpty) {
-				button.setTooltip(
-					"Please specify a target folder. Using the vault root is not allowed"
-				);
-			} else {
-				button.setTooltip("");
-			}
+		const isDisabled = isRootOrEmpty || isApiKeyMissing;
+		let tooltipText = "";
+
+		if (isRootOrEmpty) {
+			tooltipText =
+				"Please specify a target folder. Using the vault root is not allowed";
+		}
+
+		if (isApiKeyMissing) {
+			tooltipText = tooltipText
+				? `${tooltipText}. Please enter your Hardcover API key`
+				: "Please enter your Hardcover API key";
+		}
+
+		for (const button of this.syncButtons) {
+			button.setDisabled(isDisabled);
+			button.setTooltip(tooltipText);
 		}
 	}
 
