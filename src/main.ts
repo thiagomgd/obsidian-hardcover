@@ -66,6 +66,48 @@ export default class ObsidianHardcover extends Plugin {
 		.obhc-settings .has-error {
 			border-color: var(--text-error) !important;
 		}
+		.obhc-accordion {
+			margin-bottom: 8px;
+			border: 1px solid var(--background-modifier-border);
+			border-radius: 4px;
+		}
+		.obhc-accordion-header {
+			display: flex;
+			align-items: center;
+			cursor: pointer;
+			padding: 5px;
+			border-radius: 4px 4px 0 0;
+		}
+		.obhc-accordion-header:hover {
+			background-color: var(--interactive-hover);
+		}
+		.obhc-accordion-icon {
+			margin-right: 8px;
+			transition: transform 0.2s ease;
+		}
+		.obhc-accordion-icon.expanded {
+			transform: rotate(90deg);
+		}
+		.obhc-accordion-content {
+			padding: 8px;
+			display: none;
+			border-top: 1px solid var(--background-modifier-border);
+		}
+		.obhc-accordion-content.expanded {
+			display: block;
+		}
+		.obhc-field-toggle {
+			margin-left: auto !important;
+			padding: 0 !important;
+			border: none !important;
+		}
+		.obhc-field-toggle .checkbox-container {
+			margin: 0 !important;
+		}
+		.obhc-field-label {
+			font-size: 1em;
+			margin-right: 10px;
+		}
 
 		/* Debug section styles */
     .obhc-debug-details {
@@ -74,27 +116,22 @@ export default class ObsidianHardcover extends Plugin {
       padding: 0.5rem;
       margin-bottom: 1rem;
     }
-    
     .obhc-debug-summary {
       cursor: pointer;
       font-weight: 600;
     }
-    
     .obhc-debug-content {
       margin-top: 0.5rem;
     }
-    
     .obhc-debug-info-container {
       margin-bottom: 1rem;
       padding: 0.5rem;
       background-color: var(--background-secondary);
     }
-    
     .obhc-debug-info-item {
       font-family: var(--font-monospace);
       font-size: 0.9em;
     }
-
 		.obhc-test-sync input {
 			width: 50px;
 			text-align: center;

@@ -21,6 +21,7 @@ interface SyncButtonConfig {
 export default class SettingsTab extends PluginSettingTab {
 	plugin: ObsidianHardcover;
 	SYNC_CTA_LABEL: string;
+	chevronIcon: string;
 	debugBookLimit: number;
 	private syncButtons: ButtonComponent[] = [];
 
@@ -30,6 +31,7 @@ export default class SettingsTab extends PluginSettingTab {
 		super(app, plugin);
 		this.plugin = plugin;
 		this.SYNC_CTA_LABEL = "Sync now";
+		this.chevronIcon = `<svg viewBox="0 0 8 13" width="8" height="13" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 1.5l5 5-5 5" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
 		this.debugBookLimit = 1;
 	}
 
@@ -40,17 +42,15 @@ export default class SettingsTab extends PluginSettingTab {
 
 		this.syncButtons = [];
 
+		containerEl.createEl("h2", { text: "Obsidian Hardcover Plugin" });
 		// API section
-		containerEl.createEl("h2", { text: "API Configuration" });
 		this.renderApiTokenSetting(containerEl);
 
 		// files section
-		containerEl.createEl("h2", { text: "File Organization" });
 		this.renderFolderSetting(containerEl);
 		this.renderFilenameTemplateSetting(containerEl);
 
 		// sync section
-		containerEl.createEl("h2", { text: "Synchronization" });
 		this.renderLastSyncTimestampSetting(containerEl);
 
 		this.addSyncButton({
@@ -321,6 +321,135 @@ export default class SettingsTab extends PluginSettingTab {
 			});
 	}
 
+	private renderAccordionField(
+		containerEl: HTMLElement,
+		field: FieldDefinition
+	) {
+		const fieldSettings = this.plugin.settings.fieldsSettings[field.key];
+		const isEnabled = fieldSettings.enabled;
+
+		const accordionContainer = containerEl.createDiv({ cls: "obhc-accordion" });
+
+		const header = accordionContainer.createDiv({
+			cls: "obhc-accordion-header",
+		});
+
+		const icon = header.createSpan({ cls: "obhc-accordion-icon" });
+		icon.innerHTML = this.chevronIcon;
+
+		header.createSpan({ text: field.name });
+
+		if (field.key !== "title") {
+			const toggleSetting = new Setting(header);
+			toggleSetting.addToggle((toggle) => {
+				toggle.setValue(isEnabled).onChange(async (value) => {
+					this.plugin.settings.fieldsSettings[field.key].enabled = value;
+					await this.plugin.saveSettings();
+
+					if (content) {
+						if (value) {
+							content.removeClass("obhc-disabled-settings");
+						} else {
+							content.addClass("obhc-disabled-settings");
+						}
+					}
+				});
+			});
+
+			toggleSetting.settingEl.addClass("obhc-field-toggle");
+			toggleSetting.nameEl.remove();
+			toggleSetting.descEl.remove();
+		}
+
+		const contentWrapper = accordionContainer.createDiv({
+			cls: "obhc-accordion-content",
+		});
+		const content = contentWrapper.createDiv({
+			cls: isEnabled ? "" : "obhc-disabled-settings",
+		});
+
+		header.addEventListener("click", (e) => {
+			if (
+				e.target &&
+				(e.target as HTMLElement).closest(".checkbox-container")
+			) {
+				return;
+			}
+
+			icon.classList.toggle("expanded");
+			contentWrapper.classList.toggle("expanded");
+		});
+
+		this.addFieldSettings(content, field);
+
+		return accordionContainer;
+	}
+
+	private addFieldSettings(containerEl: HTMLElement, field: FieldDefinition) {
+		const fieldSettings = this.plugin.settings.fieldsSettings[field.key];
+
+		if (field.key !== "firstRead" && field.key !== "lastRead") {
+			new Setting(containerEl)
+				.setName("Property name")
+				.setDesc(`Frontmatter property name for ${field.name.toLowerCase()}`)
+				.addText((text) =>
+					text
+						.setPlaceholder(field.key)
+						.setValue(fieldSettings.propertyName)
+						.onChange(async (value) => {
+							this.plugin.settings.fieldsSettings[field.key].propertyName =
+								value || field.key;
+							await this.plugin.saveSettings();
+						})
+				);
+		}
+
+		if (field.hasDataSource) {
+			const sourceKey =
+				`${field.key}Source` as keyof typeof this.plugin.settings.dataSourcePreferences;
+			const currentSource =
+				this.plugin.settings.dataSourcePreferences[sourceKey];
+
+			new Setting(containerEl)
+				.setName("Get from book")
+				.setDesc(
+					`By default all data will be retrieved from Editions. Turn this on to get the ${field.name} from the Book instead.`
+				)
+				.addToggle((toggle) => {
+					toggle.setValue(currentSource === "book").onChange(async (value) => {
+						this.plugin.settings.dataSourcePreferences[sourceKey] = value
+							? "book"
+							: "edition";
+						await this.plugin.saveSettings();
+					});
+				});
+		}
+
+		if (field.key === "firstRead" || field.key === "lastRead") {
+			this.addActivityDatePropertyField(
+				containerEl,
+				field.key,
+				"start",
+				field.name
+			);
+			this.addActivityDatePropertyField(
+				containerEl,
+				field.key,
+				"end",
+				field.name
+			);
+		}
+
+		if (field.key === "status") {
+			containerEl.createEl("p", {
+				text: "Customize how Hardcover statuses appear in your notes.",
+				attr: { style: "margin-top: 15px; margin-bottom: 10px;" },
+			});
+
+			this.renderStatusMappingSettings(containerEl);
+		}
+	}
+
 	private renderFieldSettings(containerEl: HTMLElement) {
 		containerEl.createEl("p", {
 			text: "Configure which data to include in your book notes.",
@@ -394,108 +523,9 @@ export default class SettingsTab extends PluginSettingTab {
 			cls: "field-groups-container",
 		});
 
-		fields.forEach((field, index) => {
-			const fieldGroup = fieldGroupsContainer.createDiv({ cls: "field-group" });
-			this.renderFieldSetting(fieldGroup, field);
-
-			// add divider after each field except the last one
-			if (index < fields.length - 1) {
-				fieldGroupsContainer.createEl("hr", { cls: "field-separator" });
-			}
+		fields.forEach((field) => {
+			this.renderAccordionField(fieldGroupsContainer, field);
 		});
-	}
-
-	private renderFieldSetting(containerEl: HTMLElement, field: FieldDefinition) {
-		const fieldSettings = this.plugin.settings.fieldsSettings[field.key];
-
-		// Create a container for the main toggle
-		const mainSetting = new Setting(containerEl)
-			.setName(field.name)
-			.setDesc(field.description);
-
-		if (mainSetting.nameEl.textContent !== "Title") {
-			mainSetting.addToggle((toggle) =>
-				toggle.setValue(fieldSettings.enabled).onChange(async (value) => {
-					this.plugin.settings.fieldsSettings[field.key].enabled = value;
-					await this.plugin.saveSettings();
-					// Refresh to show/hide property name field
-					this.display();
-				})
-			);
-		}
-
-		// only show additional settings if the field is enabled
-		if (fieldSettings.enabled) {
-			const additionalSettingsContainer = containerEl.createDiv({
-				cls: "nested-settings",
-			});
-
-			if (field.key !== "firstRead" && field.key !== "lastRead") {
-				new Setting(additionalSettingsContainer)
-					.setName("Property name")
-					.setDesc(`Frontmatter property name for ${field.name.toLowerCase()}`)
-					.addText((text) =>
-						text
-							.setPlaceholder(field.key)
-							.setValue(fieldSettings.propertyName)
-							.onChange(async (value) => {
-								this.plugin.settings.fieldsSettings[field.key].propertyName =
-									value || field.key;
-								await this.plugin.saveSettings();
-							})
-					);
-			}
-
-			if (field.hasDataSource) {
-				const sourceKey =
-					`${field.key}Source` as keyof typeof this.plugin.settings.dataSourcePreferences;
-				const currentSource =
-					this.plugin.settings.dataSourcePreferences[sourceKey];
-
-				new Setting(additionalSettingsContainer)
-					.setName("Get from book")
-					.setDesc(
-						`By default all data will be retrieved from Editions. Turn this on to get the ${field.name} from the Book instead.`
-					)
-					.addToggle((toggle) => {
-						toggle
-							.setValue(currentSource === "book")
-							.onChange(async (value) => {
-								this.plugin.settings.dataSourcePreferences[sourceKey] = value
-									? "book"
-									: "edition";
-								await this.plugin.saveSettings();
-							})
-							.setDisabled(
-								!this.plugin.settings.fieldsSettings[field.key].enabled
-							)
-							.setTooltip(
-								`Use ${currentSource === "book" ? "book" : "edition"} as source`
-							);
-					});
-			}
-
-			// add specific fields for date properties
-			if (field.key === "firstRead" || field.key === "lastRead") {
-				this.addActivityDatePropertyField(
-					additionalSettingsContainer,
-					field.key,
-					"start",
-					field.name
-				);
-				this.addActivityDatePropertyField(
-					additionalSettingsContainer,
-					field.key,
-					"end",
-					field.name
-				);
-			}
-
-			// add specific fields for status property
-			if (field.key === "status") {
-				this.renderStatusMappingSettings(containerEl);
-			}
-		}
 	}
 
 	private addActivityDatePropertyField(
