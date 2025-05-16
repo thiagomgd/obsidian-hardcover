@@ -60,6 +60,10 @@ export default class ObsidianHardcover extends Plugin {
 		.obhc-settings .setting-item:last-of-type {
 			padding-bottom: 0;
 		}
+		.obhc-settings .sync-setting-note {
+			margin-bottom: 10px;
+			font-style: italic;
+		}	
 		.obhc-settings .mod-toggle {
 			border: none;
 		}

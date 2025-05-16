@@ -11,12 +11,29 @@ export class SyncService {
 		this.hardcoverAPI = plugin.hardcoverAPI;
 	}
 
+	private validateTimestamp(timestamp: string): boolean {
+		if (!timestamp) return true; // empty timestamp is valid, for full sync
+
+		// ISO 8601 format regex
+		const isoDateRegex =
+			/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(([+-]\d{2}:\d{2})|Z)?$/;
+		return isoDateRegex.test(timestamp);
+	}
+
 	async startSync(options: { debugLimit?: number } = {}) {
 		const targetFolder = this.plugin.settings.targetFolder;
+		const { lastSyncTimestamp } = this.plugin.settings;
 
 		if (this.plugin.fileUtils.isRootOrEmpty(targetFolder)) {
 			new Notice(
 				"Please specify a subfolder for your Hardcover books. Using the vault root is not supported."
+			);
+			return;
+		}
+
+		if (lastSyncTimestamp && !this.validateTimestamp(lastSyncTimestamp)) {
+			new Notice(
+				"Invalid timestamp format. Please use ISO 8601 format (YYYY-MM-DD'T'HH:mm:ss.SSSZ) or leave empty."
 			);
 			return;
 		}

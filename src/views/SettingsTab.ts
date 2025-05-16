@@ -52,6 +52,11 @@ export default class SettingsTab extends PluginSettingTab {
 			isMainCTA: true,
 		});
 
+		containerEl.createEl("div", {
+			text: `Note: Content below the ${CONTENT_DELIMITER} delimiter in your notes will be preserved during syncs. It's still recommended to maintain backups of your vault.`,
+			cls: "setting-item-description sync-setting-note",
+		});
+
 		// API section
 		this.renderApiTokenSetting(containerEl);
 
@@ -61,14 +66,6 @@ export default class SettingsTab extends PluginSettingTab {
 
 		// sync section
 		this.renderLastSyncTimestampSetting(containerEl);
-
-		containerEl.createEl("div", {
-			text: `Note: Content below the ${CONTENT_DELIMITER} delimiter in your notes will be preserved during syncs. It's still recommended to maintain backups of your vault.`,
-			cls: "setting-item-description",
-			attr: {
-				style: "font-style: italic;",
-			},
-		});
 
 		containerEl.createEl("hr");
 
@@ -161,8 +158,9 @@ export default class SettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Last Sync Timestamp")
 			.setDesc(
-				"The timestamp relative to when the last synchronization was run. Format: YYYY-MM-DD'T'HH:mm:ss.SSSSSSXXX" // TODO: explain how timestamp is used in filters
+				"When provided, only books updated on Hardcover after this timestamp will be synced. Leave empty to sync your entire library. Example format: 2025-01-01T18:30:35.519934+00:00"
 			)
+
 			.addText((text) =>
 				text
 					.setPlaceholder("YYYY-MM-DD'T'HH:mm:ss.SSSSSSXXX")
