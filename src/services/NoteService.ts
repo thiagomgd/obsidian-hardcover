@@ -1,6 +1,7 @@
 import { TFile, Vault } from "obsidian";
 import { CONTENT_DELIMITER } from "src/config";
 import ObsidianHardcover from "src/main";
+import { BookMetadata } from "src/types";
 import { FileUtils } from "src/utils/FileUtils";
 
 export class NoteService {
@@ -12,7 +13,7 @@ export class NoteService {
 		this.plugin = plugin;
 	}
 
-	async createNote(bookMetadata: any): Promise<TFile | null> {
+	async createNote(bookMetadata: BookMetadata): Promise<TFile | null> {
 		try {
 			const filename = this.fileUtils.processFilenameTemplate(
 				this.plugin.settings.filenameTemplate,
@@ -49,7 +50,7 @@ export class NoteService {
 	}
 
 	async updateNote(
-		bookMetadata: any,
+		bookMetadata: BookMetadata,
 		existingFile: TFile
 	): Promise<TFile | null> {
 		try {

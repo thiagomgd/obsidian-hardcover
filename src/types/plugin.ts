@@ -66,3 +66,9 @@ export interface FieldDefinition {
 	hasDataSource?: boolean;
 	isActivityDateField?: boolean;
 }
+
+export interface BookMetadata {
+	hardcover_book_id: number;
+	// allow for dynamic properties based on user custom property names
+	[key: string]: any;
+}

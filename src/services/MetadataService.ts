@@ -1,5 +1,6 @@
 import { HARDCOVER_BOOKS_ROUTE, HARDCOVER_URL } from "src/config";
 import {
+	BookMetadata,
 	HardcoverUserBook,
 	HardcoverUserBooksReads,
 	PluginSettings,
@@ -16,9 +17,9 @@ export class MetadataService {
 		this.settings = settings;
 	}
 
-	buildMetadata(userBook: HardcoverUserBook): any {
+	buildMetadata(userBook: HardcoverUserBook): BookMetadata {
 		const { fieldsSettings, dataSourcePreferences } = this.settings;
-		const metadata: Record<string, any> = {
+		const metadata: BookMetadata = {
 			// always include the Hardcover book id
 			hardcover_book_id: userBook.book_id,
 		};
