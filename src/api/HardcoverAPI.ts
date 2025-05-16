@@ -75,12 +75,19 @@ export class HardcoverAPI {
 			variables,
 		});
 
+		// remove Bearer if it exists since HC currently includes it in the string it copies
+		let apiKey = this.settings.apiKey.trim();
+
+		if (apiKey.toLowerCase().startsWith("bearer ")) {
+			apiKey = apiKey.substring(7);
+		}
+
 		const options = {
 			hostname: HARDCOVER_API.GRAPHQL_URL,
 			path: HARDCOVER_API.GRAPHQL_PATH,
 			method: "POST",
 			headers: {
-				Authorization: `${this.settings.apiKey}`,
+				Authorization: `Bearer ${apiKey}`,
 				"Content-Type": "application/json",
 				"Content-Length": data.length,
 			},
