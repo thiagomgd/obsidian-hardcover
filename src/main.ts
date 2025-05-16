@@ -66,6 +66,40 @@ export default class ObsidianHardcover extends Plugin {
 		.obhc-settings .has-error {
 			border-color: var(--text-error) !important;
 		}
+
+		/* Debug section styles */
+    .obhc-debug-details {
+      margin-top: 1rem;
+      border: 1px solid var(--background-modifier-border);
+      border-radius: 4px;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .obhc-debug-summary {
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .obhc-debug-content {
+      margin-top: 0.5rem;
+      padding-left: 0.5rem;
+    }
+    
+    .obhc-debug-info-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      background-color: var(--background-secondary);
+      border-radius: 4px;
+    }
+    
+    .obhc-debug-info-item {
+      font-family: var(--font-monospace);
+      font-size: 0.9em;
+    }
   `;
 		document.head.appendChild(styleEl);
 	}

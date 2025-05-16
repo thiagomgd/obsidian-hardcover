@@ -47,10 +47,11 @@ export default class SettingsTab extends PluginSettingTab {
 
 		// sebug section, always show basic info, conditionally show dev options
 		containerEl.createEl("h2", { text: "Debug Information" });
-		this.renderBasicDebugInfo(containerEl);
+		this.renderDebugInfo(containerEl);
 
 		// show developer options in dev mode
 		if (IS_DEV) {
+			containerEl.createEl("h3", { text: "Developer Options" });
 			this.renderDevOptions(containerEl);
 		}
 	}
@@ -195,37 +196,79 @@ export default class SettingsTab extends PluginSettingTab {
 		}
 	}
 
-	private renderBasicDebugInfo(containerEl: HTMLElement) {
-		new Setting(containerEl)
-			.setName("User ID")
-			.setDesc("Your Hardcover user ID (used for API calls)")
-			.addText((text) =>
-				text
-					.setValue(
-						this.plugin.settings.userId
-							? String(this.plugin.settings.userId)
-							: "Not set"
-					)
-					.setDisabled(true)
-			);
+	private renderDebugInfo(containerEl: HTMLElement) {
+		const debugDetails = containerEl.createEl("details", {
+			cls: "obhc-debug-details",
+		});
 
-		new Setting(containerEl)
-			.setName("Books Count")
-			.setDesc("Total number of books in your Hardcover library")
-			.addText((text) =>
+		debugDetails.createEl("summary", {
+			text: "Debug Information",
+			cls: "obhc-debug-summary",
+		});
+
+		const debugContent = debugDetails.createEl("div", {
+			cls: "obhc-debug-content",
+		});
+
+		const infoContainer = debugContent.createEl("div", {
+			cls: "obhc-debug-info-container",
+		});
+
+		infoContainer.createEl("div", {
+			text: `Hardcover User ID: ${this.plugin.settings.userId || "Not set"}`,
+			cls: "obhc-debug-info-item",
+		});
+
+		infoContainer.createEl("div", {
+			text: `Total Hardcover Books Count: ${
+				this.plugin.settings.booksCount || "Unknown"
+			}`,
+			cls: "obhc-debug-info-item",
+		});
+
+		this.renderTestSyncSetting(debugContent);
+	}
+
+	private renderTestSyncSetting(containerEl: HTMLElement) {
+		const testSyncSetting = new Setting(containerEl)
+			.setName("Test Sync")
+			.setDesc(
+				"Sync a limited number of books to test the plugin before doing a full sync"
+			)
+			.addText((text) => {
 				text
-					.setValue(
-						this.plugin.settings.booksCount
-							? String(this.plugin.settings.booksCount)
-							: "Unknown"
-					)
-					.setDisabled(true)
-			);
+					.setPlaceholder("1")
+					.setValue(String(this.debugBookLimit))
+					.onChange((value) => {
+						this.debugBookLimit = parseInt(value) || 1;
+					});
+
+				text.inputEl.style.width = "50px";
+				text.inputEl.style.textAlign = "center";
+			});
+
+		testSyncSetting.addButton((button) => {
+			button.setButtonText("Run");
+			button.onClick(async () => {
+				button.setButtonText("Syncing...");
+				button.setDisabled(true);
+
+				try {
+					await this.plugin.syncService.startSync({
+						debugLimit: this.debugBookLimit,
+					});
+					this.display();
+				} catch (error) {
+					console.error("Test sync failed:", error);
+				} finally {
+					button.setButtonText("Run");
+					button.setDisabled(false);
+				}
+			});
+		});
 	}
 
 	private renderDevOptions(containerEl: HTMLElement) {
-		containerEl.createEl("h3", { text: "Developer Options" });
-
 		const debugSyncSetting = new Setting(containerEl)
 			.setName("Debug Sync")
 			.setDesc("Run a sync with limited number of books")
