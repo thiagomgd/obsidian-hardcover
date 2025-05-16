@@ -7,11 +7,22 @@ import {
 	FieldsSettings,
 } from "src/types";
 
+interface SyncButtonConfig {
+	containerEl: HTMLElement;
+	name?: string;
+	description?: string;
+	buttonText?: string;
+	debugLimit?: number;
+	showLimitInput?: boolean;
+	settingClassName?: string;
+	isMainCTA?: boolean;
+}
+
 export default class SettingsTab extends PluginSettingTab {
 	plugin: ObsidianHardcover;
 	SYNC_CTA_LABEL: string;
 	debugBookLimit: number;
-	private syncButton: ButtonComponent | null = null;
+	private syncButtons: ButtonComponent[] = [];
 
 	private isDev = true; // TODO: detect dev mode
 
@@ -27,6 +38,8 @@ export default class SettingsTab extends PluginSettingTab {
 		containerEl.empty();
 		containerEl.addClass("obhc-settings");
 
+		this.syncButtons = [];
+
 		// API section
 		containerEl.createEl("h2", { text: "API Configuration" });
 		this.renderApiTokenSetting(containerEl);
@@ -39,13 +52,28 @@ export default class SettingsTab extends PluginSettingTab {
 		// sync section
 		containerEl.createEl("h2", { text: "Synchronization" });
 		this.renderLastSyncTimestampSetting(containerEl);
-		this.renderSyncSetting(containerEl);
+
+		this.addSyncButton({
+			containerEl: containerEl,
+			name: "Sync Hardcover library",
+			description: "Sync your Hardcover books to Obsidian notes",
+			buttonText: this.SYNC_CTA_LABEL,
+			isMainCTA: true,
+		});
+
+		containerEl.createEl("div", {
+			text: `Note: Content below the ${CONTENT_DELIMITER} delimiter in your notes will be preserved during syncs. It's still recommended to maintain backups of your vault.`,
+			cls: "setting-item-description",
+			attr: {
+				style: "font-style: italic;",
+			},
+		});
 
 		// fields section
 		containerEl.createEl("h2", { text: "Data Fields" });
 		this.renderFieldSettings(containerEl);
 
-		// sebug section, always show basic info, conditionally show dev options
+		// debug section
 		containerEl.createEl("h2", { text: "Debug Information" });
 		this.renderDebugInfo(containerEl);
 
@@ -117,7 +145,7 @@ export default class SettingsTab extends PluginSettingTab {
 					this.plugin.settings.targetFolder = value;
 					await this.plugin.saveSettings();
 
-					this.updateSyncButtonState();
+					this.updateSyncButtonsState();
 				});
 		});
 	}
@@ -139,59 +167,93 @@ export default class SettingsTab extends PluginSettingTab {
 			);
 	}
 
-	private renderSyncSetting(containerEl: HTMLElement) {
-		const setting = new Setting(containerEl)
-			.setName("Sync Hardcover library")
-			.setDesc("Sync your Hardcover books to Obsidian notes");
+	private addSyncButton(config: SyncButtonConfig): ButtonComponent {
+		const {
+			containerEl,
+			name = "Sync",
+			description = "Sync Hardcover books to Obsidian",
+			buttonText = "Sync",
+			debugLimit,
+			showLimitInput = false,
+			settingClassName,
+			isMainCTA = false,
+		} = config;
 
-		setting.addButton((button) => {
-			// store the button reference
-			this.syncButton = button;
+		const setting = new Setting(containerEl).setName(name).setDesc(description);
 
-			button.setButtonText(this.SYNC_CTA_LABEL);
-			button.onClick(async () => {
+		if (settingClassName) {
+			setting.setClass(settingClassName);
+		}
+
+		let limitInputValue = debugLimit;
+		if (showLimitInput) {
+			setting.addText((text) => {
+				text
+					.setPlaceholder("1")
+					.setValue(String(debugLimit || this.debugBookLimit))
+					.onChange((value) => {
+						limitInputValue = parseInt(value) || 1;
+						if (!debugLimit) {
+							this.debugBookLimit = limitInputValue;
+						}
+					});
+			});
+		}
+
+		let button!: ButtonComponent;
+
+		setting.addButton((btn) => {
+			button = btn;
+			btn.setButtonText(buttonText);
+			btn.onClick(async () => {
 				// Show loading state
-				button.setButtonText("Syncing...");
-				button.setDisabled(true);
+				btn.setButtonText("Syncing...");
+				btn.setDisabled(true);
 
 				try {
-					await this.plugin.syncService.startSync();
+					const options = limitInputValue
+						? { debugLimit: limitInputValue }
+						: {};
+					await this.plugin.syncService.startSync(options);
+
+					if (showLimitInput) {
+						this.display();
+					}
 				} catch (error) {
 					console.error("Sync failed:", error);
 				} finally {
 					// Reset button state
-					button.setButtonText(this.SYNC_CTA_LABEL);
-					button.setDisabled(false);
+					btn.setButtonText(buttonText);
+					btn.setDisabled(false);
 				}
 			});
-			button.setCta();
 
-			this.updateSyncButtonState();
+			// turn main button into obsidian cta
+			if (isMainCTA) {
+				btn.setCta();
+			}
+
+			this.syncButtons.push(btn);
 		});
 
-		containerEl.createEl("div", {
-			text: `Note: Content below the ${CONTENT_DELIMITER} delimiter in your notes will be preserved during syncs. It's still recommended to maintain backups of your vault.`,
-			cls: "setting-item-description",
-			attr: {
-				style: "font-style: italic;",
-			},
-		});
+		this.updateSyncButtonsState();
+
+		return button;
 	}
 
-	private updateSyncButtonState() {
-		if (this.syncButton) {
-			const value = this.plugin.settings.targetFolder;
+	private updateSyncButtonsState() {
+		const targetFolder = this.plugin.settings.targetFolder;
+		const isRootOrEmpty = this.plugin.fileUtils.isRootOrEmpty(targetFolder);
 
-			const isRootOrEmpty = this.plugin.fileUtils.isRootOrEmpty(value);
-
-			this.syncButton.setDisabled(isRootOrEmpty);
+		for (const button of this.syncButtons) {
+			button.setDisabled(isRootOrEmpty);
 
 			if (isRootOrEmpty) {
-				this.syncButton.setTooltip(
+				button.setTooltip(
 					"Please specify a target folder. Using the vault root is not allowed"
 				);
 			} else {
-				this.syncButton.setTooltip("");
+				button.setTooltip("");
 			}
 		}
 	}
@@ -226,82 +288,19 @@ export default class SettingsTab extends PluginSettingTab {
 			cls: "obhc-debug-info-item",
 		});
 
-		this.renderTestSyncSetting(debugContent);
-	}
-
-	private renderTestSyncSetting(containerEl: HTMLElement) {
-		const testSyncSetting = new Setting(containerEl)
-			.setName("Test Sync")
-			.setDesc(
-				"Sync a limited number of books to test the plugin before doing a full sync"
-			)
-			.setClass("obhc-test-sync")
-			.addText((text) => {
-				text
-					.setPlaceholder("1")
-					.setValue(String(this.debugBookLimit))
-					.onChange((value) => {
-						this.debugBookLimit = parseInt(value) || 1;
-					});
-			});
-
-		testSyncSetting.addButton((button) => {
-			button.setButtonText("Run");
-			button.onClick(async () => {
-				button.setButtonText("Syncing...");
-				button.setDisabled(true);
-
-				try {
-					await this.plugin.syncService.startSync({
-						debugLimit: this.debugBookLimit,
-					});
-					this.display();
-				} catch (error) {
-					console.error("Test sync failed:", error);
-				} finally {
-					button.setButtonText("Run");
-					button.setDisabled(false);
-				}
-			});
+		this.addSyncButton({
+			containerEl: debugContent,
+			name: "Test Sync",
+			description:
+				"Sync a limited number of books to test the plugin before doing a full sync",
+			buttonText: "Run",
+			debugLimit: this.debugBookLimit,
+			showLimitInput: true,
+			settingClassName: "obhc-test-sync",
 		});
 	}
 
 	private renderDevOptions(containerEl: HTMLElement) {
-		const debugSyncSetting = new Setting(containerEl)
-			.setName("Debug Sync")
-			.setDesc("Run a sync with limited number of books")
-			.addText((text) => {
-				text
-					.setPlaceholder("1")
-					.setValue(String(this.debugBookLimit))
-					.onChange((value) => {
-						this.debugBookLimit = parseInt(value) || 1;
-					});
-
-				text.inputEl.style.width = "50px";
-				text.inputEl.style.textAlign = "center";
-			});
-
-		debugSyncSetting.addButton((button) => {
-			button.setButtonText("Run");
-			button.onClick(async () => {
-				button.setButtonText("Syncing...");
-				button.setDisabled(true);
-
-				try {
-					await this.plugin.syncService.startSync({
-						debugLimit: this.debugBookLimit,
-					});
-					this.display();
-				} catch (error) {
-					console.error("Debug sync failed:", error);
-				} finally {
-					button.setButtonText("Run");
-					button.setDisabled(false);
-				}
-			});
-		});
-
 		new Setting(containerEl)
 			.setName("Reset Plugin")
 			.setDesc("Reset plugin settings to defaults")
