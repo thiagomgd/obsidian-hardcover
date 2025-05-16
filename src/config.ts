@@ -1,5 +1,7 @@
 import { FieldsSettings, PluginSettings } from "./types";
 
+export const IS_DEV = global.IS_DEV;
+
 export const HARDCOVER_API = {
 	GRAPHQL_URL: "api.hardcover.app",
 	GRAPHQL_PATH: "/v1/graphql",

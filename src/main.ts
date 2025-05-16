@@ -1,4 +1,4 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, Plugin } from "obsidian";
 import { HardcoverAPI } from "src/api/HardcoverAPI";
 import SettingsTab from "./views/SettingsTab";
 import { PluginSettings } from "./types";
@@ -6,7 +6,7 @@ import { SyncService } from "./services/SyncService";
 import { MetadataService } from "./services/MetadataService";
 import { FileUtils } from "./utils/FileUtils";
 import { NoteService } from "./services/NoteService";
-import { DEFAULT_SETTINGS } from "./config";
+import { DEFAULT_SETTINGS, IS_DEV } from "./config";
 
 export default class ObsidianHardcover extends Plugin {
 	settings: PluginSettings;
@@ -17,6 +17,13 @@ export default class ObsidianHardcover extends Plugin {
 	syncService: SyncService;
 
 	async onload() {
+		// TODO: remove after dev
+		if (IS_DEV) {
+			console.log("Development mode");
+		} else {
+			console.log("Running production build");
+		}
+
 		await this.loadSettings();
 		this.loadStyles();
 

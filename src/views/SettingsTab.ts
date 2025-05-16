@@ -1,5 +1,5 @@
 import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
-import { CONTENT_DELIMITER, HARDCOVER_STATUS_MAP } from "src/config";
+import { CONTENT_DELIMITER, HARDCOVER_STATUS_MAP, IS_DEV } from "src/config";
 import ObsidianHardcover from "src/main";
 import {
 	ActivityDateFieldConfig,
@@ -50,7 +50,7 @@ export default class SettingsTab extends PluginSettingTab {
 		this.renderBasicDebugInfo(containerEl);
 
 		// show developer options in dev mode
-		if (this.isDev) {
+		if (IS_DEV) {
 			this.renderDevOptions(containerEl);
 		}
 	}
