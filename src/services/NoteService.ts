@@ -1,5 +1,6 @@
 import { TFile, Vault } from "obsidian";
-import { CONTENT_DELIMITER } from "src/config";
+import { CONTENT_DELIMITER } from "src/config/constants";
+
 import ObsidianHardcover from "src/main";
 import { BookMetadata } from "src/types";
 import { FileUtils } from "src/utils/FileUtils";

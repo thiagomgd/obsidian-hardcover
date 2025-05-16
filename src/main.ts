@@ -6,7 +6,8 @@ import { SyncService } from "./services/SyncService";
 import { MetadataService } from "./services/MetadataService";
 import { FileUtils } from "./utils/FileUtils";
 import { NoteService } from "./services/NoteService";
-import { DEFAULT_SETTINGS, IS_DEV } from "./config";
+import { IS_DEV } from "./config/constants";
+import { DEFAULT_SETTINGS } from "./config/defaultSettings";
 
 export default class ObsidianHardcover extends Plugin {
 	settings: PluginSettings;

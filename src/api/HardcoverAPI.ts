@@ -4,9 +4,9 @@ import {
 	FetchLibraryParams,
 	PluginSettings,
 } from "../types";
-import { HARDCOVER_API } from "src/config";
 import { GetUserIdResponse, GraphQLResponse, HardcoverUser } from "src/types";
 import { QueryBuilder } from "./QueryBuilder";
+import { HARDCOVER_API } from "src/config/constants";
 
 export class HardcoverAPI {
 	private settings: PluginSettings;

@@ -1,5 +1,7 @@
 import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
-import { CONTENT_DELIMITER, HARDCOVER_STATUS_MAP, IS_DEV } from "src/config";
+import { CONTENT_DELIMITER, IS_DEV } from "src/config/constants";
+import { HARDCOVER_STATUS_MAP } from "src/config/statusMapping";
+import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
 import ObsidianHardcover from "src/main";
 import {
 	ActivityDateFieldConfig,
@@ -488,68 +490,7 @@ export default class SettingsTab extends PluginSettingTab {
 	}
 
 	private renderFieldSettings(containerEl: HTMLElement) {
-		const fields: FieldDefinition[] = [
-			{
-				key: "title",
-				name: "Title",
-				description: "Book title",
-				hasDataSource: true,
-			},
-			{ key: "rating", name: "Rating", description: "Your rating" },
-			{ key: "status", name: "Status", description: "Reading status" },
-			{
-				key: "cover",
-				name: "Cover",
-				description: "Book cover image",
-				hasDataSource: true,
-			},
-			{ key: "authors", name: "Authors", description: "Book authors" },
-			{
-				key: "contributors",
-				name: "Contributors",
-				description: "Other contributors (translators, narrators, etc.)",
-			},
-			{
-				key: "releaseDate",
-				name: "Release Date",
-				description: "Publication date",
-				hasDataSource: true,
-			},
-			{
-				key: "description",
-				name: "Description",
-				description: "Book description",
-			},
-			{ key: "url", name: "URL", description: "Hardcover URL" },
-			{ key: "genres", name: "Genres", description: "Book genres" },
-			{
-				key: "series",
-				name: "Series",
-				description: "Series information",
-			},
-			{
-				key: "publisher",
-				name: "Publisher",
-				description: "Publisher name",
-			},
-			{
-				key: "firstRead",
-				name: "First Read",
-				description: "Start and end date of first read",
-				isActivityDateField: true,
-			},
-			{
-				key: "lastRead",
-				name: "Last Read",
-				description: "Start and end date of last read",
-				isActivityDateField: true,
-			},
-			{
-				key: "totalReads",
-				name: "Total reads",
-				description: "Times read",
-			},
-		];
+		const fields = FIELD_DEFINITIONS;
 
 		// create field groups div for better spacing
 		const fieldGroupsContainer = containerEl.createDiv({

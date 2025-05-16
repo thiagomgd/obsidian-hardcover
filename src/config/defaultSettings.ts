@@ -1,0 +1,50 @@
+import { FieldsSettings, PluginSettings } from "src/types";
+import { HARDCOVER_STATUS_MAP } from "./statusMapping";
+
+export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
+	rating: { enabled: true, propertyName: "rating" },
+	status: { enabled: true, propertyName: "status" },
+
+	title: { enabled: true, propertyName: "title" },
+	cover: { enabled: true, propertyName: "cover" },
+	authors: { enabled: true, propertyName: "authors" },
+	contributors: { enabled: true, propertyName: "contributors" },
+	releaseDate: { enabled: true, propertyName: "releaseDate" },
+	url: { enabled: true, propertyName: "url" },
+
+	description: { enabled: true, propertyName: "description" },
+	genres: { enabled: true, propertyName: "genres" },
+	series: { enabled: true, propertyName: "series" },
+
+	publisher: { enabled: true, propertyName: "publisher" },
+
+	firstRead: {
+		enabled: true,
+		propertyName: "firstRead",
+		startPropertyName: "firstReadStart",
+		endPropertyName: "firstReadEnd",
+	},
+	lastRead: {
+		enabled: true,
+		propertyName: "lastRead",
+		startPropertyName: "lastReadStart",
+		endPropertyName: "lastReadEnd",
+	},
+	totalReads: { enabled: true, propertyName: "totalReads" },
+};
+
+export const DEFAULT_SETTINGS: PluginSettings = {
+	apiKey: "",
+	lastSyncTimestamp: "",
+	userId: null,
+	booksCount: null,
+	fieldsSettings: DEFAULT_FIELDS_SETTINGS,
+	dataSourcePreferences: {
+		titleSource: "edition",
+		coverSource: "edition",
+		releaseDateSource: "edition",
+	},
+	statusMapping: HARDCOVER_STATUS_MAP,
+	targetFolder: "HardcoverBooks",
+	filenameTemplate: "${title} - (${year})",
+};

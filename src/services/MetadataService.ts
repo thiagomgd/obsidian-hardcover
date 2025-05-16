@@ -1,4 +1,4 @@
-import { HARDCOVER_BOOKS_ROUTE, HARDCOVER_URL } from "src/config";
+import { HARDCOVER_BOOKS_ROUTE, HARDCOVER_URL } from "src/config/constants";
 import {
 	BookMetadata,
 	HardcoverUserBook,
