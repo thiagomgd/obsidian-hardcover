@@ -150,40 +150,82 @@ export class SyncService {
 
 			let createdNotesCount = 0;
 			let updatedNotesCount = 0;
+			let failedBooksCount = 0;
+			let failedBooks: Array<{ id: number; title: string; error: string }> = [];
 
 			// Task 2: create notes
 			for (let i = 0; i < books.length; i++) {
 				updateProgress("Creating notes");
 				const book = books[i];
-				const metadata = metadataService.buildMetadata(book);
 
-				// check if note already exists by checking hardcover book Id
-				const existingNote = await noteService.findNoteByHardcoverId(
-					book.book_id
-				);
+				try {
+					const metadata = metadataService.buildMetadata(book);
 
-				if (existingNote) {
-					// update existing note
-					await noteService.updateNote(metadata, existingNote);
-					updatedNotesCount++;
-				} else {
-					// create new note
-					await noteService.createNote(metadata);
-					createdNotesCount++;
+					// check if note already exists by checking hardcover book Id
+					const existingNote = await noteService.findNoteByHardcoverId(
+						book.book_id
+					);
+
+					if (existingNote) {
+						// update existing note
+						await noteService.updateNote(metadata, existingNote);
+						updatedNotesCount++;
+					} else {
+						// create new note
+						await noteService.createNote(metadata);
+						createdNotesCount++;
+					}
+				} catch (error) {
+					console.error("Error processing book:", error);
+
+					// attmempt to extract title for better error reporting
+					let bookTitle = "Unknown";
+					try {
+						const titleSource =
+							this.plugin.settings.dataSourcePreferences.titleSource;
+						bookTitle =
+							titleSource === "book"
+								? book.book.title
+								: book.edition.title || "Unknown";
+					} catch (e) {
+						console.log("Could not get book title:", e);
+					}
+
+					failedBooks.push({
+						id: book.book_id,
+						title: bookTitle,
+						error: error.message,
+					});
+
+					failedBooksCount++;
+					// continue with next book instead of blocking the whole sync
 				}
 
 				completedTasks = totalBooks + (i + 1);
 			}
 
-			// update timestamp after successful sync
-			this.plugin.settings.lastSyncTimestamp = new Date().toISOString();
-			await this.plugin.saveSettings();
+			// only update the timestamp if ALL books were successfully processed
+			if (failedBooksCount === 0) {
+				this.plugin.settings.lastSyncTimestamp = new Date().toISOString();
+				await this.plugin.saveSettings();
+			}
 
 			notice.hide();
 
-			const message = debugMode
+			let message = debugMode
 				? `DEBUG: Sync complete: ${createdNotesCount} created, ${updatedNotesCount} updated!`
 				: `Sync complete: ${createdNotesCount} created, ${updatedNotesCount} updated!`;
+
+			if (failedBooksCount > 0) {
+				message += ` (${failedBooksCount} books failed to process)`;
+
+				console.warn(
+					`${failedBooksCount} books failed to process:`,
+					failedBooks
+				);
+
+				console.log("Last sync timestamp not updated due to book failures");
+			}
 
 			new Notice(message);
 		} catch (error) {
