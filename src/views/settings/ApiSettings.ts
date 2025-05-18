@@ -1,5 +1,6 @@
 import { Setting } from "obsidian";
 import ObsidianHardcover from "src/main";
+import { markSettingAsRequired } from "../ui/SettingsHelpers";
 
 export function renderApiTokenSetting(
 	containerEl: HTMLElement,
@@ -8,9 +9,13 @@ export function renderApiTokenSetting(
 ): void {
 	let textComponent: any;
 
-	new Setting(containerEl)
+	const setting = new Setting(containerEl)
 		.setName("Hardcover API key")
-		.setDesc("Get your API key from https://hardcover.app/account/api")
+		.setDesc("Get your API key from https://hardcover.app/account/api");
+
+	markSettingAsRequired(setting);
+
+	setting
 		.addExtraButton((button) => {
 			button
 				.setIcon("refresh-cw")

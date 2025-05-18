@@ -1,6 +1,7 @@
 import { Setting } from "obsidian";
 import { DEFAULT_FILENAME_FORMAT } from "src/config/defaultSettings";
 import ObsidianHardcover from "src/main";
+import { markSettingAsRequired } from "../ui/SettingsHelpers";
 
 export function renderFilenameTemplateSetting(
 	containerEl: HTMLElement,
@@ -31,8 +32,10 @@ export function renderFolderSetting(
 		"The folder where book notes will be stored (required, will be created if it doesn't exist)";
 
 	const setting = new Setting(containerEl)
-		.setName("Target Folder *")
+		.setName("Target Folder")
 		.setDesc(baseDesc);
+
+	markSettingAsRequired(setting);
 
 	setting.addText((text) => {
 		text

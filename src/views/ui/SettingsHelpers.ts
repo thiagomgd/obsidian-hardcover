@@ -15,3 +15,12 @@ export function createSetting(
 
 	return setting;
 }
+
+export function markSettingAsRequired(setting: Setting): Setting {
+	const asterisk = document.createElement("span");
+	asterisk.textContent = " *";
+	asterisk.style.color = "var(--text-error)";
+	setting.nameEl.appendChild(asterisk);
+
+	return setting;
+}
