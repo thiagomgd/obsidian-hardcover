@@ -50,4 +50,9 @@ export class FileUtils {
 		filename = filename.replace(/\${[^}]+}/g, "");
 		return this.sanitizeFilename(filename) + ".md";
 	}
+
+	escapeMarkdownCharacters(text: string): string {
+		// escape square brackets
+		return text.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
+	}
 }
