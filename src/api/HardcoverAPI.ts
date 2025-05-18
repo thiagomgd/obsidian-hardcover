@@ -3,6 +3,7 @@ import {
 	LibraryPageParams,
 	FetchLibraryParams,
 	PluginSettings,
+	NodeNetworkError,
 } from "../types";
 import { GetUserIdResponse, GraphQLResponse, HardcoverUser } from "src/types";
 import { QueryBuilder } from "./QueryBuilder";
@@ -44,9 +45,23 @@ export class HardcoverAPI {
 						) {
 							const jsonResponse = JSON.parse(responseData);
 							resolve(jsonResponse);
+						} else if (res.statusCode === 401 || res.statusCode === 403) {
+							reject(
+								new Error(
+									"Authentication failed: Your Hardcover API key appears to be invalid or expired. Please check your settings and update it."
+								)
+							);
+						} else if (res.statusCode === 429) {
+							reject(
+								new Error(
+									"Rate limit exceeded: Too many requests to Hardcover API. Please try again in a few minutes."
+								)
+							);
 						} else {
 							reject(
-								new Error(`API request failed with status ${res.statusCode}`)
+								new Error(
+									`API request failed with status ${res.statusCode}: ${responseData}`
+								)
 							);
 						}
 					} catch (error) {
@@ -55,8 +70,38 @@ export class HardcoverAPI {
 				});
 			});
 
-			req.on("error", (error) => {
-				reject(new Error(`Network error: ${error.message}`));
+			// timeout to prevent hanging requests
+			req.setTimeout(15000, () => {
+				req.destroy();
+				reject(
+					new Error(
+						"Request timed out. The Hardcover API may be experiencing issues or your internet connection is unstable."
+					)
+				);
+			});
+
+			req.on("error", (error: NodeNetworkError) => {
+				if (error.code === "ENOTFOUND") {
+					reject(
+						new Error(
+							"Unable to connect to Hardcover API. Please check your internet connection and try again later."
+						)
+					);
+				} else if (error.code === "ETIMEDOUT") {
+					reject(
+						new Error(
+							"Connection to Hardcover API timed out. Please check your internet connection and try again."
+						)
+					);
+				} else if (error.code === "ECONNREFUSED") {
+					reject(
+						new Error(
+							"Connection to Hardcover API was refused. The service may be down or unreachable."
+						)
+					);
+				} else {
+					reject(new Error(`Network error: ${error.message}`));
+				}
 			});
 
 			if (data) {

@@ -71,7 +71,28 @@ export class SyncService {
 			}
 		} catch (error) {
 			console.error("Sync failed:", error);
-			new Notice("Sync failed. Check console for details.");
+
+			let errorMessage = "Sync failed.";
+
+			if (error.message.includes("Authentication failed")) {
+				errorMessage = error.message;
+			} else if (
+				error.message.includes("Unable to connect") ||
+				error.message.includes("timed out") ||
+				error.message.includes("ENOTFOUND") ||
+				error.message.includes("ETIMEDOUT")
+			) {
+				errorMessage =
+					"Could not connect to Hardcover API. Please check your internet connection and try again.";
+			} else if (error.message.includes("Rate limit")) {
+				errorMessage =
+					"Rate limit reached. Please wait a few minutes and try again.";
+			} else {
+				errorMessage =
+					"Sync failed. Check the developer console for more details (Ctrl+Shift+I).";
+			}
+
+			new Notice(errorMessage, 10000); // show for 10 seconds
 		}
 	}
 
