@@ -61,4 +61,9 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
 		name: "Total reads",
 		description: "Times read",
 	},
+	{
+		key: "readYears",
+		name: "Read Years",
+		description: "List of years when the book was read",
+	},
 ];

@@ -31,6 +31,7 @@ export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
 		endPropertyName: "lastReadEnd",
 	},
 	totalReads: { enabled: true, propertyName: "totalReads" },
+	readYears: { enabled: false, propertyName: "readYears" },
 };
 
 export const DEFAULT_FILENAME_FORMAT = "${title} - (${year})";

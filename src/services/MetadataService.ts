@@ -134,6 +134,11 @@ export class MetadataService {
 			if (fieldsSettings.totalReads.enabled && activity.totalReads) {
 				metadata[fieldsSettings.totalReads.propertyName] = activity.totalReads;
 			}
+
+			// add read years
+			if (fieldsSettings.readYears.enabled && activity.readYears.length > 0) {
+				metadata[fieldsSettings.readYears.propertyName] = activity.readYears;
+			}
 		}
 
 		return metadata;
@@ -188,7 +193,7 @@ export class MetadataService {
 
 	private extractReadingActivity(reads: HardcoverUserBooksReads[]) {
 		if (!reads || !Array.isArray(reads) || reads.length === 0) {
-			return { firstRead: null, lastRead: null, totalReads: 0 };
+			return { firstRead: null, lastRead: null, totalReads: 0, readYears: [] };
 		}
 
 		// create a copy of the array
@@ -209,6 +214,24 @@ export class MetadataService {
 
 		const totalReads = sortedReads.length;
 
+		// extract array of unique years from reading activity
+		const readYears = sortedReads
+			.map((read) => {
+				// try to get the year from finished_at, fall back to started_at
+				const dateStr = read.finished_at || read.started_at;
+				if (!dateStr) return null;
+
+				try {
+					return new Date(dateStr).getFullYear().toString();
+				} catch (e) {
+					console.warn("Error parsing date:", dateStr, e);
+					return null;
+				}
+			})
+			.filter((year): year is string => year !== null)
+			.filter((year, index, self) => self.indexOf(year) === index)
+			.sort();
+
 		return {
 			firstRead: {
 				start: firstRead.started_at || null,
@@ -219,6 +242,7 @@ export class MetadataService {
 				end: lastRead.finished_at || null,
 			},
 			totalReads,
+			readYears,
 		};
 	}
 

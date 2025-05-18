@@ -58,6 +58,8 @@ export interface FieldsSettings {
 	firstRead: ActivityDateFieldConfig;
 	lastRead: ActivityDateFieldConfig; // enabling firstRead/lastRead will create both start/end properties in the frontmatter
 	totalReads: FieldConfig;
+
+	readYears: FieldConfig;
 }
 
 export interface FieldDefinition {
