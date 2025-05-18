@@ -1,4 +1,5 @@
 export interface PluginSettings {
+	settingsVersion: number;
 	apiKey: string;
 	lastSyncTimestamp: string;
 	userId: number | null;

@@ -8,6 +8,7 @@ import { FileUtils } from "./utils/FileUtils";
 import { NoteService } from "./services/NoteService";
 import { IS_DEV } from "./config/constants";
 import { DEFAULT_SETTINGS } from "./config/defaultSettings";
+import { SettingsMigrationService } from "./services/SettingsMigrationService";
 
 export default class ObsidianHardcover extends Plugin {
 	settings: PluginSettings;
@@ -43,7 +44,29 @@ export default class ObsidianHardcover extends Plugin {
 	onunload() {}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const savedData = await this.loadData();
+
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, savedData);
+
+		// check if migration is needed
+		if (
+			!savedData ||
+			typeof savedData.settingsVersion === "undefined" ||
+			savedData.settingsVersion < DEFAULT_SETTINGS.settingsVersion
+		) {
+			console.log(
+				`Settings migration needed: from settings version ${
+					savedData?.settingsVersion || "none"
+				} to ${DEFAULT_SETTINGS.settingsVersion}`
+			);
+
+			// apply migrations
+			this.settings = SettingsMigrationService.migrateSettings(this.settings);
+
+			// save the migrated settings
+			await this.saveSettings();
+			console.log("Settings migration completed and saved");
+		}
 	}
 
 	async saveSettings() {
