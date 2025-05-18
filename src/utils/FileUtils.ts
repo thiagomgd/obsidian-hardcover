@@ -52,7 +52,19 @@ export class FileUtils {
 	}
 
 	escapeMarkdownCharacters(text: string): string {
-		// escape square brackets
-		return text.replace(/\[/g, "\\[").replace(/\]/g, "\\]");
+		return (
+			text
+				// brackets used for links in obsidian
+				.replace(/\[/g, "\\[")
+				.replace(/\]/g, "\\]")
+				// obsidian formatting chars
+				.replace(/\*/g, "\\*")
+				.replace(/\_/g, "\\_")
+				.replace(/\`/g, "\\`")
+				// headings and tags
+				.replace(/\#/g, "\\#")
+				// HTML tags
+				.replace(/\</g, "\\<")
+		);
 	}
 }
