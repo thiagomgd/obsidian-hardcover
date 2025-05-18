@@ -178,7 +178,7 @@ export class MetadataService {
 			.filter((item) => item.contribution && item.contribution !== "Author")
 			.map((item) => ({
 				name: item.author?.name,
-				role: item.contribution,
+				role: this.capitalizeFirstLetter(item.contribution),
 			}))
 			.filter((name) => !!name) // remove any undefined/null names
 			.slice(0, 5); // limit to 5 authors
@@ -220,5 +220,10 @@ export class MetadataService {
 			},
 			totalReads,
 		};
+	}
+
+	private capitalizeFirstLetter(text: string): string {
+		if (!text) return "";
+		return text.charAt(0).toUpperCase() + text.slice(1);
 	}
 }
