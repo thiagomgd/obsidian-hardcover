@@ -157,6 +157,16 @@ export class HardcoverAPI {
 			return [];
 		}
 
+		// add delay based on library size to respect the the 60 req/min limit
+		const getDelayMs = (totalBooks: number): number => {
+			if (totalBooks < 200) return 0;
+			if (totalBooks < 500) return 500;
+			if (totalBooks < 1000) return 1000;
+			return 1500;
+		};
+
+		const delayMs = getDelayMs(totalBooks);
+
 		const pageSize = 100;
 		const allBooks: any[] = [];
 		let currentOffset = 0;
@@ -177,6 +187,10 @@ export class HardcoverAPI {
 			// if less books than requested or reached the total, exit
 			if (booksPage.length < limit || allBooks.length >= totalBooks) {
 				break;
+			}
+
+			if (delayMs > 0) {
+				await this.delay(delayMs);
 			}
 
 			// Update offset for next page
@@ -247,5 +261,9 @@ export class HardcoverAPI {
 
 		const data = await this.graphqlRequest<GetUserIdResponse>(query);
 		return data.me[0];
+	}
+
+	private async delay(ms: number): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 }
