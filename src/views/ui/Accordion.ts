@@ -5,6 +5,7 @@ import { FieldDefinition } from "src/types";
 export class Accordion {
 	private plugin: ObsidianHardcover;
 	private chevronIcon: string;
+	private expandedSections: Map<string, boolean> = new Map();
 
 	constructor(plugin: ObsidianHardcover) {
 		this.plugin = plugin;
@@ -55,6 +56,15 @@ export class Accordion {
 			cls: isEnabled ? "" : "obhc-disabled-settings",
 		});
 
+		// check if this section was previously expanded
+		const isExpanded = this.expandedSections.get(field.key) || false;
+
+		// set expanded state if needed
+		if (isExpanded) {
+			icon.classList.add("expanded");
+			contentWrapper.classList.add("expanded");
+		}
+
 		header.addEventListener("click", (e) => {
 			if (
 				e.target &&
@@ -63,8 +73,12 @@ export class Accordion {
 				return;
 			}
 
+			const newExpandedState = !contentWrapper.classList.contains("expanded");
 			icon.classList.toggle("expanded");
 			contentWrapper.classList.toggle("expanded");
+
+			// save the new state
+			this.expandedSections.set(field.key, newExpandedState);
 		});
 
 		return content;
