@@ -49,8 +49,8 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
 	},
 	{ key: "url", name: "URL", description: "Hardcover URL" },
 	{ key: "genres", name: "Genres", description: "Book genres" },
-	{ key: "rating", name: "Rating", description: "Your rating" },
 	{ key: "status", name: "Status", description: "Reading status" },
+	{ key: "rating", name: "Rating", description: "Your rating" },
 	{ key: "review", name: "Review", description: "Your review of the book" },
 	{
 		key: "firstRead",
