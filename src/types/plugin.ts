@@ -10,11 +10,11 @@ export interface PluginSettings {
 
 	// data source preferences
 	dataSourcePreferences: {
-		titleSource: "book" | "edition";
-		coverSource: "book" | "edition";
-		releaseDateSource: "book" | "edition";
-		authorsSource: "book" | "edition";
-		contributorsSource: "book" | "edition";
+		titleSource: DataSource;
+		coverSource: DataSource;
+		releaseDateSource: DataSource;
+		authorsSource: DataSource;
+		contributorsSource: DataSource;
 	};
 
 	statusMapping: {
@@ -25,6 +25,7 @@ export interface PluginSettings {
 	filenameTemplate: string;
 }
 
+type DataSource = "book" | "edition";
 export interface FieldConfig {
 	enabled: boolean;
 	propertyName: string;
