@@ -119,6 +119,11 @@ export class QueryBuilder {
 			fields.push("cached_contributors");
 		}
 
+		// genres
+		if (settings.genres.enabled) {
+			fields.push("cached_tags");
+		}
+
 		return fields.join("\n                        ");
 	}
 

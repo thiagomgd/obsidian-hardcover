@@ -56,6 +56,16 @@ interface HardcoverBook {
 	slug: string;
 	cached_contributors: Record<string, any>[];
 	book_series: HardcoverBookSeries[];
+	cached_tags?: {
+		Genre?: Array<{
+			tag: string;
+			tagSlug: string;
+			category: string;
+			categorySlug: string;
+			spoilerRatio: number;
+			count: number;
+		}>;
+	};
 }
 
 interface HardcoverEdition {

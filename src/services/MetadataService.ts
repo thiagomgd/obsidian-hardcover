@@ -133,8 +133,6 @@ export class MetadataService {
 			] = `${HARDCOVER_URL}/${HARDCOVER_BOOKS_ROUTE}/${book.slug}`;
 		}
 
-		// TODO: add genres
-
 		// add publisher
 		if (fieldsSettings.publisher.enabled && edition.publisher?.name) {
 			metadata[fieldsSettings.publisher.propertyName] = edition.publisher.name;
@@ -145,6 +143,21 @@ export class MetadataService {
 			const seriesArray = this.extractSeriesInfo(book.book_series);
 			if (seriesArray.length > 0) {
 				metadata[fieldsSettings.series.propertyName] = seriesArray;
+			}
+		}
+
+		// add genres
+		if (
+			fieldsSettings.genres.enabled &&
+			book.cached_tags &&
+			book.cached_tags.Genre
+		) {
+			const genres = book.cached_tags.Genre.map((tag: any) => tag.tag).filter(
+				(genre: string) => !!genre
+			);
+
+			if (genres.length > 0) {
+				metadata[fieldsSettings.genres.propertyName] = genres;
 			}
 		}
 
