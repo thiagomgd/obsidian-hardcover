@@ -43,8 +43,22 @@ export class FileUtils {
 				filename = filename.replace(/\${year}/g, year.toString());
 			} catch (error) {
 				console.error("Error extracting year from release date:", error);
+				// replace with empty string instead of leaving the template variable
+				filename = filename.replace(/\${year}/g, "");
 			}
+		} else {
+			// if no release date, remove the ${year} variable
+			filename = filename.replace(/\${year}/g, "");
 		}
+
+		// clean up empty brackets, etc.
+		filename = filename
+			.replace(/\(\s*\)/g, "")
+			.replace(/\[\s*\]/g, "")
+			.replace(/\{\s*\}/g, "")
+			.replace(/\s+-\s+/g, " ")
+			.replace(/\s+/g, " ")
+			.trim();
 
 		// replace any unsupported template variables with empty string
 		filename = filename.replace(/\${[^}]+}/g, "");
