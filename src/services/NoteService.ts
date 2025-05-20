@@ -3,7 +3,7 @@ import { CONTENT_DELIMITER } from "src/config/constants";
 import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
 
 import ObsidianHardcover from "src/main";
-import { BookMetadata } from "src/types";
+import { ActivityDateFieldConfig, BookMetadata } from "src/types";
 import { FileUtils } from "src/utils/FileUtils";
 
 export class NoteService {
@@ -126,7 +126,7 @@ export class NoteService {
 			const coverProperty =
 				this.plugin.settings.fieldsSettings.cover.propertyName;
 			if (bookMetadata[coverProperty]) {
-				content += `\n![${escapedTitle} Cover](${bookMetadata[coverProperty]})\n`;
+				content += `\n![${escapedTitle} Cover|300](${bookMetadata[coverProperty]})\n`;
 			}
 		}
 
@@ -168,41 +168,65 @@ export class NoteService {
 		// exclude bodyContent from frontmatter
 		const { bodyContent, ...frontmatterData } = metadata;
 
-		// create an ordered list of properties based on field definitions
-		const orderedProperties = [
-			"hardcoverBookId",
-			...FIELD_DEFINITIONS.map(
-				(field) => this.plugin.settings.fieldsSettings[field.key].propertyName
-			),
-		];
-
 		const frontmatterEntries: string[] = [];
 
-		for (const propName of orderedProperties) {
-			if (frontmatterData.hasOwnProperty(propName)) {
-				const value = frontmatterData[propName];
+		// first add hardcoverBookId as the first property
+		if (frontmatterData.hardcoverBookId !== undefined) {
+			frontmatterEntries.push(
+				`hardcoverBookId: ${frontmatterData.hardcoverBookId}`
+			);
+		}
 
-				if (Array.isArray(value)) {
-					frontmatterEntries.push(`${propName}: ${JSON.stringify(value)}`);
-				} else if (typeof value === "string") {
-					if (
-						propName ===
-						this.plugin.settings.fieldsSettings.description.propertyName
-					) {
-						// handle description field converting newlines to escaped lines
-						const escapedValue = value.replace(/\n/g, "\\n");
-						frontmatterEntries.push(
-							`${propName}: "${escapedValue.replace(/"/g, '\\"')}"`
-						);
-					} else {
-						// for other string fields, just escape quotes
-						frontmatterEntries.push(
-							`${propName}: "${value.replace(/"/g, '\\"')}"`
-						);
-					}
+		// add all other properties in the order defined in FIELD_DEFINITIONS
+		const allFieldPropertyNames = FIELD_DEFINITIONS.flatMap((field) => {
+			const fieldSettings = this.plugin.settings.fieldsSettings[field.key];
+
+			const propertyNames = [fieldSettings.propertyName];
+
+			// add start/end property names for activity date fields
+			if (field.isActivityDateField) {
+				const activityField = fieldSettings as ActivityDateFieldConfig;
+				propertyNames.push(
+					activityField.startPropertyName,
+					activityField.endPropertyName
+				);
+			}
+
+			return propertyNames;
+		});
+
+		// add properties in the defined order
+		for (const propName of allFieldPropertyNames) {
+			if (!frontmatterData.hasOwnProperty(propName)) continue;
+
+			// skip hardcoverBookId as we already added it
+			if (propName === "hardcoverBookId") continue;
+
+			const value = frontmatterData[propName];
+
+			// skip undefined/null values
+			if (value === undefined || value === null) continue;
+
+			if (Array.isArray(value)) {
+				frontmatterEntries.push(`${propName}: ${JSON.stringify(value)}`);
+			} else if (typeof value === "string") {
+				if (
+					propName ===
+					this.plugin.settings.fieldsSettings.description.propertyName
+				) {
+					// handle description field converting newlines to escaped lines
+					const escapedValue = value.replace(/\n/g, "\\n");
+					frontmatterEntries.push(
+						`${propName}: "${escapedValue.replace(/"/g, '\\"')}"`
+					);
 				} else {
-					frontmatterEntries.push(`${propName}: ${value}`);
+					// for other string fields, just escape quotes
+					frontmatterEntries.push(
+						`${propName}: "${value.replace(/"/g, '\\"')}"`
+					);
 				}
+			} else {
+				frontmatterEntries.push(`${propName}: ${value}`);
 			}
 		}
 
