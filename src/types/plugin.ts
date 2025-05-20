@@ -72,7 +72,7 @@ export interface FieldDefinition {
 }
 
 export interface BookMetadata {
-	hardcover_book_id: number;
+	hardcoverBookId: number;
 	bodyContent: {
 		title?: string;
 		coverUrl?: string;

@@ -22,7 +22,7 @@ export class MetadataService {
 		const { fieldsSettings, dataSourcePreferences } = this.settings;
 		const metadata: BookMetadata = {
 			// always include the Hardcover book id
-			hardcover_book_id: userBook.book_id,
+			hardcoverBookId: userBook.book_id,
 			bodyContent: {},
 		};
 

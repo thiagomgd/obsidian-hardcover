@@ -214,8 +214,8 @@ export class NoteService {
 					if (frontmatterMatch) {
 						const frontmatter = frontmatterMatch[1];
 
-						// check if hardcover_book_id matches
-						const idMatch = frontmatter.match(/hardcover_book_id:\s*(\d+)/);
+						// check if hardcoverBookId matches
+						const idMatch = frontmatter.match(/hardcoverBookId:\s*(\d+)/);
 						if (idMatch && parseInt(idMatch[1]) === hardcoverBookId) {
 							return file;
 						}
