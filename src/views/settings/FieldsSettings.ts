@@ -61,17 +61,19 @@ function addFieldSettings(
 		const currentSource = plugin.settings.dataSourcePreferences[sourceKey];
 
 		new Setting(containerEl)
-			.setName("Get from book")
+			.setName("Data source")
 			.setDesc(
-				`By default all data will be retrieved from Editions. Turn this on to get the ${field.name} from the Book instead.`
+				`Choose whether to use book-level or edition-level data for the ${field.name.toLowerCase()}.`
 			)
-			.addToggle((toggle) => {
-				toggle.setValue(currentSource === "book").onChange(async (value) => {
-					plugin.settings.dataSourcePreferences[sourceKey] = value
-						? "book"
-						: "edition";
-					await plugin.saveSettings();
-				});
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOption("book", "Book")
+					.addOption("edition", "Edition")
+					.setValue(currentSource)
+					.onChange(async (value: "book" | "edition") => {
+						plugin.settings.dataSourcePreferences[sourceKey] = value;
+						await plugin.saveSettings();
+					});
 			});
 	}
 
