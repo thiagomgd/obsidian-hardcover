@@ -45,12 +45,12 @@ export interface FieldsSettings {
 	authors: FieldConfig;
 	contributors: FieldConfig;
 	releaseDate: FieldConfig;
-	url: FieldConfig;
 
 	// book fields
 	description: FieldConfig;
-	genres: FieldConfig;
+	url: FieldConfig;
 	series: FieldConfig;
+	genres: FieldConfig;
 
 	// edition fields
 	publisher: FieldConfig;

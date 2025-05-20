@@ -14,8 +14,11 @@ export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
 	url: { enabled: true, propertyName: "url" },
 
 	description: { enabled: true, propertyName: "description" },
+	series: {
+		enabled: true,
+		propertyName: "seriesName",
+	},
 	genres: { enabled: true, propertyName: "genres" },
-	series: { enabled: true, propertyName: "series" },
 
 	publisher: { enabled: true, propertyName: "publisher" },
 

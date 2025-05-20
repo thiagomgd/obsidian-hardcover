@@ -1,6 +1,7 @@
 import { HARDCOVER_BOOKS_ROUTE, HARDCOVER_URL } from "src/config/constants";
 import {
 	BookMetadata,
+	HardcoverBookSeries,
 	HardcoverUserBook,
 	HardcoverUserBooksReads,
 	PluginSettings,
@@ -109,11 +110,18 @@ export class MetadataService {
 		}
 
 		// TODO: add genres
-		// TODO: add series
 
 		// add publisher
 		if (fieldsSettings.publisher.enabled && edition.publisher?.name) {
 			metadata[fieldsSettings.publisher.propertyName] = edition.publisher.name;
+		}
+
+		// add series
+		if (fieldsSettings.series.enabled && book.book_series) {
+			const seriesArray = this.extractSeriesInfo(book.book_series);
+			if (seriesArray.length > 0) {
+				metadata[fieldsSettings.series.propertyName] = seriesArray;
+			}
 		}
 
 		// add reading activity
@@ -256,6 +264,22 @@ export class MetadataService {
 			totalReads,
 			readYears,
 		};
+	}
+
+	private extractSeriesInfo(seriesData: HardcoverBookSeries[]): string[] {
+		if (!seriesData || !Array.isArray(seriesData) || seriesData.length === 0) {
+			return [];
+		}
+
+		return seriesData
+			.filter((series) => series.series?.name)
+			.map((series) => {
+				const seriesName = series.series.name;
+				if (series.position) {
+					return `${seriesName} #${series.position}`;
+				}
+				return seriesName;
+			});
 	}
 
 	private capitalizeFirstLetter(text: string): string {

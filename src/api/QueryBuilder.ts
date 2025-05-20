@@ -102,6 +102,15 @@ export class QueryBuilder {
 			fields.push("slug");
 		}
 
+		if (settings.series.enabled) {
+			fields.push(`book_series {
+				series {
+					name
+				}
+				position
+    	}`);
+		}
+
 		return fields.join("\n                        ");
 	}
 

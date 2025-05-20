@@ -54,6 +54,7 @@ interface HardcoverBook {
 	release_date: string;
 	cached_image: Record<string, any>;
 	slug: string;
+	book_series: HardcoverBookSeries[];
 }
 
 interface HardcoverEdition {
@@ -69,4 +70,11 @@ interface HardcoverEdition {
 export interface HardcoverUserBooksReads {
 	started_at: string;
 	finished_at: string;
+}
+
+export interface HardcoverBookSeries {
+	series: {
+		name: string;
+	};
+	position: number;
 }
