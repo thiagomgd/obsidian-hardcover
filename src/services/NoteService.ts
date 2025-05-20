@@ -1,5 +1,6 @@
 import { TFile, Vault } from "obsidian";
 import { CONTENT_DELIMITER } from "src/config/constants";
+import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
 
 import ObsidianHardcover from "src/main";
 import { BookMetadata } from "src/types";
@@ -166,24 +167,46 @@ export class NoteService {
 	private createFrontmatter(metadata: Record<string, any>): string {
 		// exclude bodyContent from frontmatter
 		const { bodyContent, ...frontmatterData } = metadata;
-		return Object.entries(frontmatterData)
-			.map(([key, value]) => {
+
+		// create an ordered list of properties based on field definitions
+		const orderedProperties = [
+			"hardcoverBookId",
+			...FIELD_DEFINITIONS.map(
+				(field) => this.plugin.settings.fieldsSettings[field.key].propertyName
+			),
+		];
+
+		const frontmatterEntries: string[] = [];
+
+		for (const propName of orderedProperties) {
+			if (frontmatterData.hasOwnProperty(propName)) {
+				const value = frontmatterData[propName];
+
 				if (Array.isArray(value)) {
-					return `${key}: ${JSON.stringify(value)}`;
+					frontmatterEntries.push(`${propName}: ${JSON.stringify(value)}`);
 				} else if (typeof value === "string") {
-					if (key === "description") {
+					if (
+						propName ===
+						this.plugin.settings.fieldsSettings.description.propertyName
+					) {
 						// handle description field converting newlines to escaped lines
 						const escapedValue = value.replace(/\n/g, "\\n");
-						return `${key}: "${escapedValue.replace(/"/g, '\\"')}"`;
+						frontmatterEntries.push(
+							`${propName}: "${escapedValue.replace(/"/g, '\\"')}"`
+						);
 					} else {
 						// for other string fields, just escape quotes
-						return `${key}: "${value.replace(/"/g, '\\"')}"`;
+						frontmatterEntries.push(
+							`${propName}: "${value.replace(/"/g, '\\"')}"`
+						);
 					}
 				} else {
-					return `${key}: ${value}`;
+					frontmatterEntries.push(`${propName}: ${value}`);
 				}
-			})
-			.join("\n");
+			}
+		}
+
+		return frontmatterEntries.join("\n");
 	}
 
 	async findNoteByHardcoverId(hardcoverBookId: number): Promise<TFile | null> {

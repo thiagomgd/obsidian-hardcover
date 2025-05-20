@@ -1,5 +1,6 @@
 import { FieldDefinition } from "src/types";
 
+// settings order can be rearranged by changing this
 export const FIELD_DEFINITIONS: FieldDefinition[] = [
 	{
 		key: "title",
@@ -7,16 +8,28 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
 		description: "Book title",
 		hasDataSource: true,
 	},
-	{ key: "rating", name: "Rating", description: "Your rating" },
-	{ key: "status", name: "Status", description: "Reading status" },
-	{ key: "review", name: "Review", description: "Your review of the book" },
+	{
+		key: "description",
+		name: "Description",
+		description: "Book description",
+	},
 	{
 		key: "cover",
 		name: "Cover",
 		description: "Book cover image",
 		hasDataSource: true,
 	},
-
+	{
+		key: "releaseDate",
+		name: "Release Date",
+		description: "Publication date",
+		hasDataSource: true,
+	},
+	{
+		key: "series",
+		name: "Series",
+		description: "Series information",
+	},
 	{
 		key: "authors",
 		name: "Authors",
@@ -30,28 +43,15 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
 		hasDataSource: true,
 	},
 	{
-		key: "releaseDate",
-		name: "Release Date",
-		description: "Publication date",
-		hasDataSource: true,
-	},
-	{
-		key: "description",
-		name: "Description",
-		description: "Book description",
-	},
-	{ key: "url", name: "URL", description: "Hardcover URL" },
-	{ key: "genres", name: "Genres", description: "Book genres" },
-	{
-		key: "series",
-		name: "Series",
-		description: "Series information",
-	},
-	{
 		key: "publisher",
 		name: "Publisher",
 		description: "Publisher name",
 	},
+	{ key: "url", name: "URL", description: "Hardcover URL" },
+	{ key: "genres", name: "Genres", description: "Book genres" },
+	{ key: "rating", name: "Rating", description: "Your rating" },
+	{ key: "status", name: "Status", description: "Reading status" },
+	{ key: "review", name: "Review", description: "Your review of the book" },
 	{
 		key: "firstRead",
 		name: "First Read",
