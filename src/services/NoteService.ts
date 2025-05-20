@@ -214,10 +214,12 @@ export class NoteService {
 					propName ===
 					this.plugin.settings.fieldsSettings.description.propertyName
 				) {
-					// handle description field converting newlines to escaped lines
-					const escapedValue = value.replace(/\n/g, "\\n");
+					// remove all \n sequences and replace with spaces to avoid frontmatter issues
+					const cleanValue = value.replace(/\\n/g, " ").trim();
+					// remove any multiple spaces that might result
+					const finalValue = cleanValue.replace(/\s+/g, " ");
 					frontmatterEntries.push(
-						`${propName}: "${escapedValue.replace(/"/g, '\\"')}"`
+						`${propName}: "${finalValue.replace(/"/g, '\\"')}"`
 					);
 				} else {
 					// for other string fields, just escape quotes
