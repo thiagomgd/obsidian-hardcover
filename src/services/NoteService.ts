@@ -113,9 +113,12 @@ export class NoteService {
 	}
 
 	private createNoteContent(frontmatter: string, bookMetadata: any): string {
+		let content = this.getFrontmatterString(frontmatter);
+
+		// add title
 		const title = this.getBookTitle(bookMetadata);
 		const escapedTitle = this.fileUtils.escapeMarkdownCharacters(title);
-		let content = this.getFrontmatterString(frontmatter, escapedTitle);
+		content += `# ${escapedTitle}\n\n`;
 
 		// add book cover if enabled
 		if (this.plugin.settings.fieldsSettings.cover.enabled) {
@@ -156,8 +159,8 @@ export class NoteService {
 		}
 	}
 
-	private getFrontmatterString(frontmatter: string, title: string) {
-		return `---\n${frontmatter}\n---\n\n# ${title}\n`;
+	private getFrontmatterString(frontmatter: string) {
+		return `---\n${frontmatter}\n---\n\n`;
 	}
 
 	private createFrontmatter(metadata: Record<string, any>): string {
