@@ -4,6 +4,7 @@ import { HARDCOVER_STATUS_MAP } from "./statusMapping";
 export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
 	rating: { enabled: true, propertyName: "rating" },
 	status: { enabled: true, propertyName: "status" },
+	review: { enabled: true, propertyName: "review" },
 
 	title: { enabled: true, propertyName: "title" },
 	cover: { enabled: true, propertyName: "cover" },

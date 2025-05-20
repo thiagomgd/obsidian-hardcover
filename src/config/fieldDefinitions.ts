@@ -9,6 +9,7 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
 	},
 	{ key: "rating", name: "Rating", description: "Your rating" },
 	{ key: "status", name: "Status", description: "Reading status" },
+	{ key: "review", name: "Review", description: "Your review of the book" },
 	{
 		key: "cover",
 		name: "Cover",

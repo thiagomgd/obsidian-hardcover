@@ -37,6 +37,7 @@ export interface FieldsSettings {
 	// user_books fields
 	rating: FieldConfig;
 	status: FieldConfig;
+	review: FieldConfig;
 
 	// book or edition fields
 	title: FieldConfig;
@@ -72,6 +73,11 @@ export interface FieldDefinition {
 
 export interface BookMetadata {
 	hardcover_book_id: number;
+	bodyContent: {
+		title?: string;
+		coverUrl?: string;
+		review?: string;
+	};
 	// allow for dynamic properties based on user custom property names
 	[key: string]: any;
 }

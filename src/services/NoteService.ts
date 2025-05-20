@@ -126,6 +126,13 @@ export class NoteService {
 			}
 		}
 
+		if (
+			this.plugin.settings.fieldsSettings.review.enabled &&
+			bookMetadata.bodyContent.review
+		) {
+			content += `## My Review\n\n${bookMetadata.bodyContent.review}\n\n`;
+		}
+
 		// add obsidian-hardcover plugin delimiter
 		content += `\n${CONTENT_DELIMITER}\n\n`;
 
@@ -154,7 +161,9 @@ export class NoteService {
 	}
 
 	private createFrontmatter(metadata: Record<string, any>): string {
-		return Object.entries(metadata)
+		// exclude bodyContent from frontmatter
+		const { bodyContent, ...frontmatterData } = metadata;
+		return Object.entries(frontmatterData)
 			.map(([key, value]) => {
 				if (Array.isArray(value)) {
 					return `${key}: ${JSON.stringify(value)}`;

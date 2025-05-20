@@ -42,6 +42,7 @@ export interface HardcoverUserBook {
 	updated_at: string;
 	rating: number;
 	status_id: number;
+	review_raw: string;
 	book: HardcoverBook;
 	edition: HardcoverEdition;
 	user_book_reads: HardcoverUserBooksReads[];

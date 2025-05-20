@@ -22,6 +22,7 @@ export class MetadataService {
 		const metadata: BookMetadata = {
 			// always include the Hardcover book id
 			hardcover_book_id: userBook.book_id,
+			bodyContent: {},
 		};
 
 		const { titleSource, coverSource, releaseDateSource } =
@@ -32,7 +33,10 @@ export class MetadataService {
 		// add title (from book or edition based on user settings)
 		const currentTitleSource = titleSource === "book" ? book : edition;
 		if (currentTitleSource && currentTitleSource.title) {
+			// add to frontmatter
 			metadata[fieldsSettings.title.propertyName] = currentTitleSource.title;
+			//add to body
+			metadata.bodyContent.title = currentTitleSource.title;
 		}
 
 		// add rating if enabled and exists
@@ -47,11 +51,19 @@ export class MetadataService {
 			);
 		}
 
+		// add review to bodyContent if enabled and exists
+		if (fieldsSettings.review.enabled && userBook.review_raw) {
+			metadata.bodyContent.review = userBook.review_raw;
+		}
+
 		// add cover (from book or edition based on user settings)
 		const currentCoverSource = coverSource === "book" ? book : edition;
 		const coverUrl = currentCoverSource.cached_image?.url;
 		if (fieldsSettings.cover.enabled && coverUrl) {
+			// add to frontmatteer
 			metadata[fieldsSettings.cover.propertyName] = coverUrl;
+			// add to body
+			metadata.bodyContent.coverUrl = coverUrl;
 		}
 
 		// add authors

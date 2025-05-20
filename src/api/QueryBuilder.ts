@@ -68,6 +68,10 @@ export class QueryBuilder {
 			fields.push("status_id");
 		}
 
+		if (settings.review?.enabled) {
+			fields.push("review_raw");
+		}
+
 		return fields.join("\n                    ");
 	}
 
