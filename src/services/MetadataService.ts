@@ -68,18 +68,42 @@ export class MetadataService {
 		}
 
 		// add authors
-		if (fieldsSettings.authors.enabled && edition.cached_contributors) {
-			const authors = this.extractAuthors(edition.cached_contributors);
+		if (fieldsSettings.authors.enabled) {
+			let authors: string[] = [];
+			if (
+				dataSourcePreferences.authorsSource === "book" &&
+				book.cached_contributors
+			) {
+				authors = this.extractAuthors(book.cached_contributors);
+			} else if (
+				dataSourcePreferences.authorsSource === "edition" &&
+				edition.cached_contributors
+			) {
+				authors = this.extractAuthors(edition.cached_contributors);
+			}
+
 			if (authors.length) {
 				metadata[fieldsSettings.authors.propertyName] = authors;
 			}
 		}
 
 		// add other contributors
-		if (fieldsSettings.contributors.enabled && edition.cached_contributors) {
-			const otherContributors = this.extractContributors(
+		if (fieldsSettings.contributors.enabled) {
+			let otherContributors: Array<{ name: string; role: string }> = [];
+			if (
+				dataSourcePreferences.contributorsSource === "book" &&
+				book.cached_contributors
+			) {
+				otherContributors = this.extractContributors(book.cached_contributors);
+			} else if (
+				dataSourcePreferences.contributorsSource === "edition" &&
 				edition.cached_contributors
-			);
+			) {
+				otherContributors = this.extractContributors(
+					edition.cached_contributors
+				);
+			}
+
 			if (otherContributors.length) {
 				metadata[fieldsSettings.contributors.propertyName] =
 					otherContributors.map((c) => `${c.name} (${c.role})`);

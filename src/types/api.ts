@@ -54,6 +54,7 @@ interface HardcoverBook {
 	release_date: string;
 	cached_image: Record<string, any>;
 	slug: string;
+	cached_contributors: Record<string, any>[];
 	book_series: HardcoverBookSeries[];
 }
 

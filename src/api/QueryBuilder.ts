@@ -111,6 +111,14 @@ export class QueryBuilder {
     	}`);
 		}
 
+		//  authors/contributors from book level (if preferred)
+		if (
+			(settings.authors.enabled && dataPrefs.authorsSource === "book") ||
+			(settings.contributors.enabled && dataPrefs.contributorsSource === "book")
+		) {
+			fields.push("cached_contributors");
+		}
+
 		return fields.join("\n                        ");
 	}
 
@@ -133,7 +141,12 @@ export class QueryBuilder {
 			fields.push("cached_image");
 		}
 
-		if (settings.authors.enabled || settings.contributors.enabled) {
+		// authors/contributors from edition level (if preferred)
+		if (
+			(settings.authors.enabled && dataPrefs.authorsSource === "edition") ||
+			(settings.contributors.enabled &&
+				dataPrefs.contributorsSource === "edition")
+		) {
 			fields.push("cached_contributors");
 		}
 

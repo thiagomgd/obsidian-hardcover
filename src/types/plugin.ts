@@ -13,6 +13,8 @@ export interface PluginSettings {
 		titleSource: "book" | "edition";
 		coverSource: "book" | "edition";
 		releaseDateSource: "book" | "edition";
+		authorsSource: "book" | "edition";
+		contributorsSource: "book" | "edition";
 	};
 
 	statusMapping: {

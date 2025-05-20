@@ -16,11 +16,18 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
 		description: "Book cover image",
 		hasDataSource: true,
 	},
-	{ key: "authors", name: "Authors", description: "Book authors" },
+
+	{
+		key: "authors",
+		name: "Authors",
+		description: "Book authors",
+		hasDataSource: true,
+	},
 	{
 		key: "contributors",
 		name: "Contributors",
 		description: "Other contributors (translators, narrators, etc.)",
+		hasDataSource: true,
 	},
 	{
 		key: "releaseDate",
