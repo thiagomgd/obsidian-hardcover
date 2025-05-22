@@ -40,7 +40,7 @@ export interface FetchLibraryParams {
 export interface HardcoverUserBook {
 	book_id: number;
 	updated_at: string;
-	rating: number;
+	rating: number | null;
 	status_id: number;
 	review: string | null;
 	review_raw: string | null;
@@ -51,7 +51,7 @@ export interface HardcoverUserBook {
 
 interface HardcoverBook {
 	title: string;
-	description: string;
+	description: string | null;
 	release_date: string;
 	cached_image: Record<string, any>;
 	slug: string;
@@ -66,7 +66,7 @@ interface HardcoverBook {
 			spoilerRatio: number;
 			count: number;
 		}>;
-	};
+	} | null;
 }
 
 interface HardcoverEdition {

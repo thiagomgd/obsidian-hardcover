@@ -6,4 +6,7 @@ module.exports = {
 	},
 	testMatch: ["**/*.test.ts"],
 	testPathIgnorePatterns: ["/node_modules/", "/main.js"],
+	rootDir: ".",
+	modulePaths: ["<rootDir>"],
+	moduleDirectories: ["node_modules", "<rootDir>"],
 };
