@@ -1,10 +1,4 @@
 export class FileUtils {
-	generateFilename(title: string, year?: string | number): string {
-		const sanitizedTile = this.sanitizeFilename(title);
-		const filename = year ? `${sanitizedTile} - ${year}` : sanitizedTile;
-		return `${filename}.md`;
-	}
-
 	sanitizeFilename(name: string): string {
 		return name
 			.replace(/[\\/:*?"<>|]/g, "") // remove illegal characters
@@ -40,23 +34,25 @@ export class FileUtils {
 		if (metadata.releaseDate) {
 			try {
 				const year = new Date(metadata.releaseDate).getFullYear();
-				filename = filename.replace(/\${year}/g, year.toString());
+				if (!isNaN(year)) {
+					filename = filename.replace(/\${year}/g, year.toString());
+				} else {
+					filename = filename.replace(/\${year}/g, "");
+				}
 			} catch (error) {
 				console.error("Error extracting year from release date:", error);
-				// replace with empty string instead of leaving the template variable
 				filename = filename.replace(/\${year}/g, "");
 			}
 		} else {
-			// if no release date, remove the ${year} variable
 			filename = filename.replace(/\${year}/g, "");
 		}
 
-		// clean up empty brackets, etc.
+		// only clean up empty brackets and extra spacing, but preserve user's intentional formatting
 		filename = filename
 			.replace(/\(\s*\)/g, "")
 			.replace(/\[\s*\]/g, "")
 			.replace(/\{\s*\}/g, "")
-			.replace(/\s+-\s+/g, " ")
+			.replace(/\s+-\s*$/g, "")
 			.replace(/\s+/g, " ")
 			.trim();
 
