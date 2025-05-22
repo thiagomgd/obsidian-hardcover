@@ -12,7 +12,7 @@ import {
 import {
 	addSyncButton,
 	renderLastSyncTimestampSetting,
-	renderSyncDelimiterNote,
+	renderSyncInfoMessages,
 } from "./settings/SyncSettings";
 
 export default class SettingsTab extends PluginSettingTab {
@@ -61,7 +61,7 @@ export default class SettingsTab extends PluginSettingTab {
 		// sync button
 		this.addMainSyncButton(containerEl);
 
-		renderSyncDelimiterNote(containerEl);
+		renderSyncInfoMessages(containerEl);
 
 		containerEl.createEl("hr");
 

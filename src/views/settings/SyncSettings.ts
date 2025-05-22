@@ -121,9 +121,22 @@ export function renderLastSyncTimestampSetting(
 		);
 }
 
-export function renderSyncDelimiterNote(containerEl: HTMLElement): void {
+export function renderSyncInfoMessages(containerEl: HTMLElement): void {
 	containerEl.createEl("div", {
-		text: `Note: Content below the ${CONTENT_DELIMITER} delimiter in your notes will be preserved during syncs. It's still recommended to maintain backups of your vault.`,
+		text: `Note: Content below the ${CONTENT_DELIMITER} delimiter in your notes will be preserved during syncs.`,
+		cls: "setting-item-description",
+	});
+
+	containerEl.createEl("div", {
+		text: "⚠️ Important: While the delimiter system protects your content during syncs, regular backups of your vault are still recommended.",
+		cls: "setting-item-description sync-setting-note",
+		attr: {
+			style: "color: var(--text-warning); font-weight: 500;",
+		},
+	});
+
+	containerEl.createEl("div", {
+		text: "ℹ️ For large libraries (500+ books), sync may take several minutes due to Hardcover's API rate limits (60 requests/minute). The plugin will automatically pace requests to respect these limits.",
 		cls: "setting-item-description sync-setting-note",
 	});
 }
