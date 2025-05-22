@@ -19,11 +19,8 @@ export default class ObsidianHardcover extends Plugin {
 	syncService: SyncService;
 
 	async onload() {
-		// TODO: remove after dev
 		if (IS_DEV) {
 			console.log("Development mode");
-		} else {
-			console.log("Running production build");
 		}
 
 		await this.loadSettings();
