@@ -106,25 +106,9 @@ export default class SettingsTab extends PluginSettingTab {
 	}
 
 	updateSyncButtonsState(): void {
-		const targetFolder = this.plugin.settings.targetFolder;
-		const isRootOrEmpty = this.plugin.fileUtils.isRootOrEmpty(targetFolder);
-
-		const apiKey = this.plugin.settings.apiKey;
-		const isApiKeyMissing = !apiKey || apiKey.trim() === "";
-
-		const isDisabled = isRootOrEmpty || isApiKeyMissing;
-		let tooltipText = "";
-
-		if (isRootOrEmpty) {
-			tooltipText =
-				"Please specify a target folder. Using the vault root is not allowed";
-		}
-
-		if (isApiKeyMissing) {
-			tooltipText = tooltipText
-				? `${tooltipText}. Please enter your Hardcover API key`
-				: "Please enter your Hardcover API key";
-		}
+		const validation = this.plugin.validateSyncConstraints();
+		const isDisabled = !validation.isValid;
+		const tooltipText = validation.errorMessage || "";
 
 		for (const button of this.syncButtons) {
 			button.setDisabled(isDisabled);

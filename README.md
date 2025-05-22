@@ -130,3 +130,11 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit...
 
 These notes won't be overwritten during sync...
 ```
+
+## Feedback
+
+Feel free to open an issue if you find bugs or have a feature idea.
+
+---
+
+_Disclaimer: This plugin is not affiliated with Hardcover or Obsidian._

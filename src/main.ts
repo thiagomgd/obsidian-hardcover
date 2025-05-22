@@ -37,6 +37,19 @@ export default class ObsidianHardcover extends Plugin {
 		// Instantiate main service
 		this.syncService = new SyncService(this);
 
+		// Add command palette command
+		this.addCommand({
+			id: "sync-hardcover-library",
+			name: "Sync Hardcover library",
+			callback: () => {
+				this.triggerSync();
+			},
+		});
+
+		this.addRibbonIcon("book", "Sync Hardcover library", () => {
+			this.triggerSync();
+		});
+
 		// Add a settings tab to configure the plugin
 		this.addSettingTab(new SettingsTab(this.app, this));
 	}
@@ -79,5 +92,45 @@ export default class ObsidianHardcover extends Plugin {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS);
 		await this.saveSettings();
 		new Notice("Settings reset to defaults");
+	}
+
+	validateSyncConstraints(): { isValid: boolean; errorMessage?: string } {
+		const targetFolder = this.settings.targetFolder;
+		const isRootOrEmpty = this.fileUtils.isRootOrEmpty(targetFolder);
+
+		const apiKey = this.settings.apiKey;
+		const isApiKeyMissing = !apiKey || apiKey.trim() === "";
+
+		if (isRootOrEmpty) {
+			return {
+				isValid: false,
+				errorMessage:
+					"Please specify a target folder in settings. Using the vault root is not allowed.",
+			};
+		}
+
+		if (isApiKeyMissing) {
+			return {
+				isValid: false,
+				errorMessage: "Please enter your Hardcover API key in settings.",
+			};
+		}
+
+		return { isValid: true };
+	}
+
+	private async triggerSync(): Promise<void> {
+		const validation = this.validateSyncConstraints();
+
+		if (!validation.isValid) {
+			new Notice(validation.errorMessage || "Sync validation failed");
+			return;
+		}
+
+		try {
+			await this.syncService.startSync();
+		} catch (error) {
+			console.error("Sync failed:", error);
+		}
 	}
 }
