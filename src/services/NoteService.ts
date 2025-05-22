@@ -256,9 +256,7 @@ export class NoteService {
 			return formatted.trim();
 		} else {
 			// for raw text apply basic formatting
-			let formatted = reviewText.replace(/([.!?])\s+/g, "$1\n\n");
-			formatted = formatted.replace(/\\"/g, '"');
-			return formatted.trim();
+			return reviewText.replace(/\\"/g, '"').trim();
 		}
 	}
 

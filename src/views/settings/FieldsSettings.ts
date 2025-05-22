@@ -39,7 +39,11 @@ function addFieldSettings(
 ): void {
 	const fieldSettings = plugin.settings.fieldsSettings[field.key];
 
-	if (field.key !== "firstRead" && field.key !== "lastRead") {
+	if (
+		field.key !== "firstRead" &&
+		field.key !== "lastRead" &&
+		field.key !== "review"
+	) {
 		new Setting(containerEl)
 			.setName("Property name")
 			.setDesc(`Frontmatter property name for ${field.name.toLowerCase()}`)
