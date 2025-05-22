@@ -59,6 +59,14 @@ function addFieldSettings(
 			);
 	}
 
+	// add explanation for review field
+	if (field.key === "review") {
+		containerEl.createEl("p", {
+			text: "Review content appears in the note body, not as a frontmatter property.",
+			cls: "setting-item-description",
+		});
+	}
+
 	if (field.hasDataSource) {
 		const sourceKey =
 			`${field.key}Source` as keyof typeof plugin.settings.dataSourcePreferences;
