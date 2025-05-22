@@ -36,7 +36,7 @@ describe("FileUtils", () => {
 			};
 			expect(
 				fileUtils.processFilenameTemplate(
-					"${title} by ${authors} - (${year})",
+					"${title} by ${authors} (${year})",
 					metadata
 				)
 			).toBe("All Systems Red by Martha Wells - (2017).md");
@@ -45,14 +45,14 @@ describe("FileUtils", () => {
 		test("handles missing data gracefully", () => {
 			const metadata = { title: MOCK_BOOK.title };
 			expect(
-				fileUtils.processFilenameTemplate("${title} - (${year})", metadata)
+				fileUtils.processFilenameTemplate("${title} (${year})", metadata)
 			).toBe("All Systems Red.md");
 		});
 
 		test("handles invalid release date", () => {
 			const metadata = { title: MOCK_BOOK.title, releaseDate: "invalid" };
 			expect(
-				fileUtils.processFilenameTemplate("${title} - (${year})", metadata)
+				fileUtils.processFilenameTemplate("${title} (${year})", metadata)
 			).toBe("All Systems Red.md");
 		});
 	});

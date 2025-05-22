@@ -93,7 +93,7 @@ Customize how filenames are generated using variables:
 - `${authors}` - Main author names
 - `${year}` - Publication year
 
-Default format: `${title} - (${year})`
+Default format: `${title} (${year})`
 
 Notes are identified using the Hardcover Book ID (`hardcoverBookId` in the frontmatter) so you're free to choose whatever filename suits your vault.
 

@@ -38,7 +38,7 @@ export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
 	readYears: { enabled: false, propertyName: "readYears" },
 };
 
-export const DEFAULT_FILENAME_FORMAT = "${title} - (${year})";
+export const DEFAULT_FILENAME_FORMAT = "${title} (${year})";
 
 export const DEFAULT_SETTINGS: PluginSettings = {
 	settingsVersion: 1,

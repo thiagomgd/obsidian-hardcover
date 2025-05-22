@@ -81,8 +81,14 @@ export default class ObsidianHardcover extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		this.hardcoverAPI.updateSettings(this.settings);
-		this.metadataService.updateSettings(this.settings);
+
+		// only update if services are initialized
+		if (this.hardcoverAPI) {
+			this.hardcoverAPI.updateSettings(this.settings);
+		}
+		if (this.metadataService) {
+			this.metadataService.updateSettings(this.settings);
+		}
 	}
 
 	async resetSettings() {
