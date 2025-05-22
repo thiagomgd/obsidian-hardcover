@@ -1,9 +1,9 @@
 {
 	"id": "obsidian-hardcover",
-	"name": "Obsidian Hardcover",
+	"name": "Hardcover",
+	"description": "Sync your Hardcover library to Obsidian notes",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "",
 	"author": "aliceinwaterdeep",
 	"isDesktopOnly": false
 }
