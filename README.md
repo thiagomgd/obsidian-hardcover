@@ -139,6 +139,16 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit...
 These notes won't be overwritten during sync...
 ```
 
+## Changelog
+
+### 1.0.0 - Initial Release
+
+- Sync your Hardcover library to Obsidian notes
+- Configurable metadata fields
+- Custom filename templates
+- Preserve user notes below delimiter line
+- Command palette and ribbon icon for easy access
+
 ## Feedback
 
 Feel free to open an issue if you find bugs or have a feature idea.
