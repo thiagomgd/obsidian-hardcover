@@ -2,6 +2,8 @@
 
 Syncs your [Hardcover](https://hardcover.app) library to your Obsidian vault, creating one note per book with metadata stored in frontmatter properties.
 
+[![GitHub downloads](https://img.shields.io/github/downloads/aliceinwaterdeep/obsidian-hardcover/total)](https://github.com/aliceinwaterdeep/obsidian-hardcover/releases)
+
 ![obsidian-hardcover-demo](https://github.com/user-attachments/assets/876fcc8b-d05c-4d1f-b26b-566d572421c6)
 
 ## Features
