@@ -122,12 +122,29 @@ export class NoteService {
 		content += `# ${escapedTitle}\n\n`;
 
 		// add book cover if enabled
-		if (this.plugin.settings.fieldsSettings.cover.enabled) {
+		const hasCover =
+			this.plugin.settings.fieldsSettings.cover.enabled &&
+			bookMetadata[this.plugin.settings.fieldsSettings.cover.propertyName];
+
+		if (hasCover) {
 			const coverProperty =
 				this.plugin.settings.fieldsSettings.cover.propertyName;
-			if (bookMetadata[coverProperty]) {
-				content += `\n![${escapedTitle} Cover|300](${bookMetadata[coverProperty]})\n`;
-			}
+			content += `![${escapedTitle} Cover|300](${bookMetadata[coverProperty]})\n\n`;
+		}
+
+		// add description if available
+		const hasDescription =
+			this.plugin.settings.fieldsSettings.description.enabled &&
+			bookMetadata[
+				this.plugin.settings.fieldsSettings.description.propertyName
+			];
+
+		if (hasDescription) {
+			const descProperty =
+				this.plugin.settings.fieldsSettings.description.propertyName;
+			// add extra spacing if there is a cover above
+			const spacing = hasCover ? "\n" : "";
+			content += `${spacing}${bookMetadata[descProperty]}\n\n`;
 		}
 
 		if (
