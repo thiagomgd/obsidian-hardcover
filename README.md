@@ -21,7 +21,7 @@ Syncs your [Hardcover](https://hardcover.app) library to your Obsidian vault, cr
 > [!WARNING]
 > While the delimiter system protects your content during syncs, regular backups of your vault are still recommended. I am not responsible for any data loss.
 
-### Manual Installation
+## Manual Installation
 
 1. Download the [latest release](https://github.com/aliceinwaterdeep/obsidian-hardcover/releases/latest)
 2. Extract the ZIP file to your vault's plugins folder: `YourVaultName/.obsidian/plugins/`
@@ -29,7 +29,7 @@ Syncs your [Hardcover](https://hardcover.app) library to your Obsidian vault, cr
 4. Restart Obsidian or go to Settings → Community plugins → Reload plugins
 5. Enable "Hardcover" in Settings → Community plugins
 
-## Setup
+### Setup
 
 1. Get your Hardcover API key from [Hardcover](https://hardcover.app/account/api)
 2. Open Obsidian Settings and go to the "Hardcover" tab
