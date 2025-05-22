@@ -103,6 +103,7 @@ export default class SettingsTab extends PluginSettingTab {
 		);
 
 		this.syncButtons.push(button);
+		this.updateSyncButtonsState();
 	}
 
 	updateSyncButtonsState(): void {
