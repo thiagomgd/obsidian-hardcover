@@ -107,11 +107,6 @@ function addFieldSettings(
 	}
 
 	if (field.key === "status") {
-		containerEl.createEl("p", {
-			text: "Customize how Hardcover statuses appear in your notes.",
-			attr: { style: "margin-top: 15px; margin-bottom: 10px;" },
-		});
-
 		renderStatusMappingSettings(containerEl, plugin);
 	}
 }
