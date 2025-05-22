@@ -37,6 +37,14 @@ Syncs your [Hardcover](https://hardcover.app) library to your Obsidian vault, cr
 
 Hardcover API keys expire after 1 year. You can check the expiration date of your current key on [Hardcover](https://hardcover.app/account/api).
 
+## Quick Access
+
+Once set up, you can sync your Hardcover library in multiple ways:
+
+- **Settings tab**: Click "Sync now" in the plugin settings
+- **Command palette**: Press `Ctrl+P` or `Cmd+P` and search for "Sync Hardcover library"
+- **Ribbon icon**: Click the book icon in the left sidebar
+
 ## Sync Process
 
 The plugin follows these steps when syncing:
