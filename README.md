@@ -35,6 +35,8 @@ Syncs your [Hardcover](https://hardcover.app) library to your Obsidian vault, cr
 > [!TIP]
 > If you want to test your setup before syncing everything, you can use the Debug menu to run a test sync with a limited number of books. Recommended for large libraries.
 
+Hardcover API keys expire after 1 year. You can check the expiration date of your current key on [Hardcover](https://hardcover.app/account/api).
+
 ## Sync Process
 
 The plugin follows these steps when syncing:
@@ -43,7 +45,7 @@ The plugin follows these steps when syncing:
 2. Creates or updates notes for each book
 3. Stores the sync timestamp for incremental updates
 
-For large libraries, the plugin uses pagination and respects API rate limits.
+For large libraries, the plugin uses pagination and respects API rate limits. Hardcover limits requests to 60 per minute. The plugin handles this but very large libraries may take time.
 
 - If some books fail to process, others will still be synced
 - The timestamp is only updated if all books process successfully
@@ -71,3 +73,60 @@ Configure which fields to include in your book notes:
 - **Last Read**: Start and end dates of your most recent read
 - **Total Reads**: Number of times you've read the book
 - **Read Years**: List of years when you read the book
+
+> [!WARNING]
+> The `review` field on the API currently has some inconsistencies, so reviews might not show up in an optimal format until the issue is solved on Hardcover.
+
+### Filename Template
+
+Customize how filenames are generated using variables:
+
+- `${title}` - Book title
+- `${authors}` - Main author names
+- `${year}` - Publication year
+
+Default format: `${title} - (${year})`
+
+Notes are identified using the Hardcover Book ID (`hardcoverBookId` in the frontmatter) so you're free to choose whatever filename suits your vault.
+
+## Note Format
+
+Each synced book creates a note with:
+
+1. Frontmatter metadata containing all selected fields
+2. Title heading
+3. Cover image (if enabled)
+4. Your review (if enabled and available)
+5. Hardcover delimiter line (`<!-- obsidian-hardcover-plugin-end -->`)
+
+Content below the delimiter line is preserved during syncs, so you can add your own notes without fear of losing them during updates.
+
+> [!WARNING]
+> While the delimiter system protects your content during syncs, regular backups of your vault are still recommended. I am not responsible for any data loss.
+
+Example:
+
+```markdown
+---
+hardcoverBookId: 12345
+title: "Project Hail Mary"
+authors: ["Andy Weir"]
+rating: "5/5"
+status: ["Read"]
+releaseDate: "2021-05-04"
+---
+
+# Project Hail Mary
+
+![Project Hail Mary Cover|300](https://images.hardcover.app/...)
+
+## My Review
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit...
+
+<!-- obsidian-hardcover-plugin-end -->
+
+## My Notes
+
+These notes won't be overwritten during sync...
+```
