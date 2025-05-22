@@ -134,7 +134,10 @@ export class NoteService {
 			this.plugin.settings.fieldsSettings.review.enabled &&
 			bookMetadata.bodyContent.review
 		) {
-			content += `## My Review\n\n${bookMetadata.bodyContent.review}\n\n`;
+			const formattedReview = this.formatReviewText(
+				bookMetadata.bodyContent.review
+			);
+			content += `## My Review\n\n${formattedReview}\n\n`;
 		}
 
 		// add obsidian-hardcover plugin delimiter
@@ -233,6 +236,30 @@ export class NoteService {
 		}
 
 		return frontmatterEntries.join("\n");
+	}
+
+	private formatReviewText(reviewText: string): string {
+		if (!reviewText) return "";
+
+		// check if the review already contains HTML
+		if (reviewText.includes("<p>") || reviewText.includes("<br>")) {
+			// convert HTML to markdown-friendly format
+			let formatted = reviewText
+				.replace(/<p>/g, "")
+				.replace(/<\/p>/g, "\n\n")
+				.replace(/<br\s*\/?>/g, "\n")
+				.replace(/&quot;/g, '"')
+				.replace(/&amp;/g, "&")
+				.replace(/&lt;/g, "<")
+				.replace(/&gt;/g, ">");
+
+			return formatted.trim();
+		} else {
+			// for raw text apply basic formatting
+			let formatted = reviewText.replace(/([.!?])\s+/g, "$1\n\n");
+			formatted = formatted.replace(/\\"/g, '"');
+			return formatted.trim();
+		}
 	}
 
 	async findNoteByHardcoverId(hardcoverBookId: number): Promise<TFile | null> {

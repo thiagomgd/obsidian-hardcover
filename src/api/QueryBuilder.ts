@@ -69,6 +69,8 @@ export class QueryBuilder {
 		}
 
 		if (settings.review?.enabled) {
+			// temporarily querying both fields since the review field can return null for some users (known HC issue)
+			fields.push("review");
 			fields.push("review_raw");
 		}
 

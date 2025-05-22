@@ -44,7 +44,7 @@ export function renderDebugInfo(
 		plugin: plugin,
 		name: "Test Sync",
 		description:
-			"Sync a limited number of books to test the plugin before doing a full sync",
+			"Sync a limited number of books to test the plugin before doing a full sync. Remember to change or reset the timestamp accordingly, if set.",
 		buttonText: "Run",
 		debugLimit: debugBookLimit,
 		showLimitInput: true,

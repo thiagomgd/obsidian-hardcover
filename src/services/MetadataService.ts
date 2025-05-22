@@ -53,8 +53,15 @@ export class MetadataService {
 		}
 
 		// add review to bodyContent if enabled and exists
-		if (fieldsSettings.review.enabled && userBook.review_raw) {
-			metadata.bodyContent.review = userBook.review_raw;
+		if (fieldsSettings.review.enabled) {
+			let userReview;
+			if (userBook.review && userBook.review.trim()) {
+				userReview = userBook.review;
+			} else if (userBook.review_raw && userBook.review_raw.trim()) {
+				userReview = userBook.review_raw;
+			}
+
+			metadata.bodyContent.review = userReview;
 		}
 
 		// add cover (from book or edition based on user settings)
