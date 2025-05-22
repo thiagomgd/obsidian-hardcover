@@ -39,23 +39,14 @@ export default class SettingsTab extends PluginSettingTab {
 
 		containerEl.createEl("h2", { text: "Obsidian Hardcover Plugin" });
 
-		// sync button
-		this.addMainSyncButton(containerEl);
-
-		renderSyncDelimiterNote(containerEl);
-
-		// API section
+		// config section
 		renderApiTokenSetting(containerEl, this.plugin, () =>
 			this.updateSyncButtonsState()
 		);
-
-		// files section
 		renderFolderSetting(containerEl, this.plugin, () =>
 			this.updateSyncButtonsState()
 		);
 		renderFilenameTemplateSetting(containerEl, this.plugin);
-
-		// sync section
 		renderLastSyncTimestampSetting(containerEl, this.plugin, () =>
 			this.display()
 		);
@@ -64,6 +55,13 @@ export default class SettingsTab extends PluginSettingTab {
 
 		// fields section
 		renderFieldSettings(containerEl, this.plugin, this.accordion);
+
+		containerEl.createEl("hr");
+
+		// sync button
+		this.addMainSyncButton(containerEl);
+
+		renderSyncDelimiterNote(containerEl);
 
 		containerEl.createEl("hr");
 
@@ -88,6 +86,7 @@ export default class SettingsTab extends PluginSettingTab {
 			isMainCTA: true,
 			updateSyncButtonsState: () => this.updateSyncButtonsState(),
 			onSyncComplete: () => this.display(),
+			settingClassName: "obhc-sync-cta",
 		});
 
 		this.syncButtons.push(button);

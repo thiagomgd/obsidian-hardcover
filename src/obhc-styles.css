@@ -89,3 +89,7 @@
 	width: 50px;
 	text-align: center;
 }
+.obhc-sync-cta {
+	border-top: none;
+	padding-top: 0;
+}

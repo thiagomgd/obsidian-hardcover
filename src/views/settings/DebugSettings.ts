@@ -15,7 +15,7 @@ export function renderDebugInfo(
 	});
 
 	debugDetails.createEl("summary", {
-		text: "Debug Information",
+		text: "Debug",
 		cls: "obhc-debug-summary",
 	});
 
