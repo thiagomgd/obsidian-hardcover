@@ -20,7 +20,7 @@ export class MetadataService {
 		this.settings = settings;
 	}
 
-	buildMetadata(userBook: HardcoverUserBook): BookMetadata {
+	buildMetadata(userBook: HardcoverUserBook, includeGroupData = false): BookMetadata {
 		const { fieldsSettings, dataSourcePreferences } = this.settings;
 		const metadata: BookMetadata = {
 			// always include the Hardcover book id
@@ -79,20 +79,29 @@ export class MetadataService {
 		// add authors
 		if (fieldsSettings.authors.enabled) {
 			let authors: string[] = [];
+			let mainAuthor = null;
 			if (
 				dataSourcePreferences.authorsSource === "book" &&
 				book.cached_contributors
 			) {
 				authors = this.extractAuthors(book.cached_contributors);
+				mainAuthor = this.extractFirstAuthorWithId(book.cached_contributors);
 			} else if (
 				dataSourcePreferences.authorsSource === "edition" &&
 				edition.cached_contributors
 			) {
 				authors = this.extractAuthors(edition.cached_contributors);
+				mainAuthor = this.extractFirstAuthorWithId(book.cached_contributors);
 			}
 
 			if (authors.length) {
 				metadata[fieldsSettings.authors.propertyName] = authors;
+				if (includeGroupData && mainAuthor) {
+					metadata.groupInformationAuthor = {
+						authorName: mainAuthor.name,
+						authorId: mainAuthor.id,
+					};
+				}
 			}
 		}
 
@@ -128,6 +137,19 @@ export class MetadataService {
 		) {
 			metadata[fieldsSettings.releaseDate.propertyName] =
 				currentReleaseDateSource.release_date;
+
+			// also extract release year for grouping by author/series
+			if (includeGroupData && currentReleaseDateSource.release_date) {
+				const releaseYear = new Date(
+					currentReleaseDateSource.release_date
+				).getFullYear();
+				if (!isNaN(releaseYear)) {
+					metadata.groupInformationAuthor = {
+						...(metadata.groupInformationAuthor || {}),
+						releaseYear: releaseYear,
+					};
+				}
+			}
 		}
 
 		// add description
@@ -152,6 +174,17 @@ export class MetadataService {
 			const seriesArray = this.extractSeriesInfo(book.book_series);
 			if (seriesArray.length > 0) {
 				metadata[fieldsSettings.series.propertyName] = seriesArray;
+			}
+			if (includeGroupData && book.book_series.length > 0) {
+				// for grouping, just take the first series
+				const firstSeries: HardcoverBookSeries = book.book_series[0];
+				if (firstSeries.series) {
+					metadata.groupInformationSeries = {
+						seriesName: firstSeries.series.name,
+						seriesId: firstSeries.series.id,
+						seriesPosition: firstSeries.position,
+					};
+				}
 			}
 		}
 
@@ -214,7 +247,7 @@ export class MetadataService {
 		type: "author" | "series",
 		id: number,
 		name: string,
-		books: HardcoverUserBook[]
+		books: BookMetadata[]
 	): AuthorMetadata | SeriesMetadata{
 		let metadata: AuthorMetadata | SeriesMetadata;
 
@@ -246,8 +279,7 @@ export class MetadataService {
 		metadata.bookCountDNF = 0;
 
 		for (const book of books) {
-			const bookMetadata = this.buildMetadata(book);
-			metadata.bodyContent.books.push(bookMetadata);
+			metadata.bodyContent.books.push(book);
 
 			if (book.status_id === 2) {
 				// status_id 2 is "Read"
@@ -289,6 +321,26 @@ export class MetadataService {
 			.slice(0, 5); // limit to 5 authors
 
 		return authors;
+	}
+
+	private extractFirstAuthorWithId(contributorsData: Record<any, any>[]): { name: string; id: number } | null {
+		if (!contributorsData || !Array.isArray(contributorsData)) {
+			return null;
+		}
+
+		// filter for authors (null/empty contribution or explicitly "Author")
+		const authors = contributorsData
+			.filter(
+				(item) =>
+					!item.contribution ||
+					item.contribution === "" ||
+					item.contribution === "Author"
+			)
+			// for now we'll keep authors without name
+			// .filter((name) => !!name) // remove any undefined/null names
+			.map((item) => {return {name: item.author?.name, id: item.author?.id}})
+
+		return authors[0];
 	}
 
 	private extractContributors(

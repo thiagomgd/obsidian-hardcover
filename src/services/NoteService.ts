@@ -523,6 +523,9 @@ export class NoteService {
 
 			bookContent = bookContent.replace(/{{bookId}}/g, book.hardcoverBookId.toString());
 
+			const sortNumber = book.groupInformationSeries?.seriesPosition || book.groupInformationAuthor?.releaseYear || 0;
+			bookContent = bookContent.replace(/{{sortNumber}}/g, sortNumber.toString());
+
 			// add title
 			const title = this.getBookTitle(book);
 			bookContent = bookContent.replace(/{{title}}/g, title);
@@ -569,7 +572,7 @@ export class NoteService {
 				bookContent = bookContent.replace(/{{myReview}}/g, "");
 			}
 
-			bookContent = bookContent.replace(/{{hardcoverUrl}}/g, book.url ? `["Hardcover.app"](${book.url})` : "");
+			bookContent = bookContent.replace(/{{hardcoverUrl}}/g, book.url ? `[Hardcover.app](${book.url})` : "");
 			bookContent = bookContent.replace(/{{genres}}/g, (book.genres || []).join(", "));
 			bookContent = bookContent.replace(/{{status}}/g, (book.status || []).join(", "));
 			

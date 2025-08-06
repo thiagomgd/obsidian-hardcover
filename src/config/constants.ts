@@ -18,8 +18,10 @@ export const GROUPED_NOTE_TEMPLATE = `{{frontmatter}}
 <!-- obsidian-hardcover-plugin-end -->
 `
 
+// sortNumber is Year for author, Position for series
+// this is necessary so we can update the notes and insert new books in the right order
 export const GROUPED_NOTE_BOOK_TEMPLATE = `
-<!-- obsidian-hardcover-book-{{bookId}}-start -->
+<!-- obsidian-hardcover-book-{{bookId}}-start {{sortNumber}} -->
 ### {{title}}
 
 Status: {{status}}

@@ -92,6 +92,16 @@ export interface BookMetadata {
 		coverUrl?: string;
 		review?: string;
 	};
+	groupInformationAuthor?: {
+		authorName?: string;
+		authorId?: number;
+		releaseYear?: number;
+	};
+	groupInformationSeries?: {
+		seriesName?: string;
+		seriesId?: number;
+		seriesPosition?: number;
+	};
 	// allow for dynamic properties based on user custom property names
 	[key: string]: any;
 }

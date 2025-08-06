@@ -1,7 +1,7 @@
 import { Notice } from "obsidian";
 import { HardcoverAPI } from "src/api/HardcoverAPI";
 import ObsidianHardcover from "src/main";
-import { AuthorMetadata, HardcoverUserBook, SeriesMetadata } from "src/types";
+import { AuthorMetadata, BookMetadata, HardcoverUserBook, SeriesMetadata } from "src/types";
 
 /*
 TODDO: 
@@ -21,17 +21,16 @@ export class GroupSyncService {
 		this.hardcoverAPI = plugin.hardcoverAPI;
 	}
 
-	private isSeries(book: HardcoverUserBook): boolean {
-		return book.book.book_series?.length > 0;
+	private isSeries(book: BookMetadata): boolean {
+		return !!book.groupInformationSeries?.seriesName;
 	}
 
-	private groupBooks(books: HardcoverUserBook[]): 
-	{ series: Map<number,{name:string, books: HardcoverUserBook[]}>; 
-		authors: Map<number,{name:string, books: HardcoverUserBook[]}> } 
+	private groupBooks(books: BookMetadata[]): 
+	{ series: Map<number,{name:string, books: BookMetadata[]}>; 
+		authors: Map<number,{name:string, books: BookMetadata[]}> } 
 	{
-		const skippedNoAuthor = [];
-		const seriesMap = new Map<number,{name:string, books: HardcoverUserBook[]}>();
-		const authorMap = new Map<number,{name:string, books: HardcoverUserBook[]}>();
+		const seriesMap = new Map<number,{name:string, books: BookMetadata[]}>();
+		const authorMap = new Map<number,{name:string, books: BookMetadata[]}>();
 
 		for (const book of books) {
 			// skip to-read books
@@ -40,20 +39,15 @@ export class GroupSyncService {
 			}
 
 			if (this.isSeries(book)) {
-				const seriesName = book.book.book_series[0].series.name;
-				const seriesId = book.book.book_series[0].series.id;
+				const seriesName = book.groupInformationSeries?.seriesName || "Unknown Series";
+				const seriesId = book.groupInformationSeries?.seriesId || -1;
 				if (!seriesMap.has(seriesId)) {
 					seriesMap.set(seriesId, {name: seriesName, books: []});
 				}
 				seriesMap.get(seriesId)?.books?.push(book);
 			} else {
-				// TODO check pref for edition/book source
-				if (!book.book.cached_contributors || book.book.cached_contributors.length === 0) {
-					skippedNoAuthor.push(book);
-					continue;
-				}
-				const authorId = book.book.cached_contributors[0].author.id;
-				const authorName = book.book.cached_contributors[0].author.name;
+				const authorId = book.groupInformationAuthor?.authorId || -1;
+				const authorName = book.groupInformationAuthor?.authorName || "Unknown Author";
 				if (!authorMap.has(authorId)) {
 					authorMap.set(authorId, {name: authorName, books:[]});
 				}
@@ -64,8 +58,8 @@ export class GroupSyncService {
 		// sort series
 		seriesMap.forEach((series, _seriesId) => {
 			series.books.sort((a, b) => {
-				const aSeriesIndex = a.book.book_series[0].position;
-				const bSeriesIndex = b.book.book_series[0].position;
+				const aSeriesIndex = a.groupInformationSeries?.seriesPosition || 0;
+				const bSeriesIndex = b.groupInformationSeries?.seriesPosition || 0;
 				return aSeriesIndex - bSeriesIndex;
 			});
 		});
@@ -73,11 +67,11 @@ export class GroupSyncService {
 		// sort author books
 		authorMap.forEach((author, _authorId) => {
 			author.books.sort((a, b) => {
-				return a.book.release_date.localeCompare(b.book.release_date);
+				return (a.groupInformationAuthor?.releaseYear || 0) - (b.groupInformationAuthor?.releaseYear || 0);
 			});
 		});
 
-		console.warn("SKIPPED AUTHOR GROUPS", skippedNoAuthor)
+
 		return {
 			series: seriesMap,
 			authors: authorMap,
@@ -226,7 +220,10 @@ export class GroupSyncService {
 			let failedBooksCount = 0;
 			let failedBooks: Array<{ id: number; title: string; error: string }> = [];
 
-			const groupedBooks = this.groupBooks(books);
+			const booksMetadata = books.map((book) =>
+				metadataService.buildMetadata(book, true)
+			);
+			const groupedBooks = this.groupBooks(booksMetadata);
 
 			// Task 2: create notes
 
