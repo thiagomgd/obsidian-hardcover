@@ -29,6 +29,7 @@ export class GroupSyncService {
 	{ series: Map<number,{name:string, books: HardcoverUserBook[]}>; 
 		authors: Map<number,{name:string, books: HardcoverUserBook[]}> } 
 	{
+		const skippedNoAuthor = [];
 		const seriesMap = new Map<number,{name:string, books: HardcoverUserBook[]}>();
 		const authorMap = new Map<number,{name:string, books: HardcoverUserBook[]}>();
 
@@ -47,6 +48,10 @@ export class GroupSyncService {
 				seriesMap.get(seriesId)?.books?.push(book);
 			} else {
 				// TODO check pref for edition/book source
+				if (!book.book.cached_contributors || book.book.cached_contributors.length === 0) {
+					skippedNoAuthor.push(book);
+					continue;
+				}
 				const authorId = book.book.cached_contributors[0].author.id;
 				const authorName = book.book.cached_contributors[0].author.name;
 				if (!authorMap.has(authorId)) {
@@ -72,6 +77,7 @@ export class GroupSyncService {
 			});
 		});
 
+		console.warn("SKIPPED AUTHOR GROUPS", skippedNoAuthor)
 		return {
 			series: seriesMap,
 			authors: authorMap,
