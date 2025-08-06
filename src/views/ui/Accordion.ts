@@ -14,7 +14,7 @@ export class Accordion {
 
 	renderAccordionField(containerEl: HTMLElement, field: FieldDefinition) {
 		const fieldSettings = this.plugin.settings.fieldsSettings[field.key];
-		const isEnabled = fieldSettings.enabled;
+		const isEnabled = fieldSettings?.enabled || false; // TODO: find out why it's not oading the grouped ones
 
 		const accordionContainer = containerEl.createDiv({ cls: "obhc-accordion" });
 

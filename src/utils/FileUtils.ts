@@ -20,10 +20,19 @@ export class FileUtils {
 	}
 
 	processFilenameTemplate(template: string, metadata: any): string {
+		console.log("Processing filename template:", template, metadata);
 		let filename = template;
 
 		if (metadata.title) {
 			filename = filename.replace(/\${title}/g, metadata.title);
+		}
+
+		if (metadata.authorName) {
+			filename = filename.replace(/\${authorName}/g, metadata.authorName);
+		}
+
+		if (metadata.seriesName) {
+			filename = filename.replace(/\${seriesName}/g, metadata.seriesName);
 		}
 
 		if (metadata.authors && Array.isArray(metadata.authors)) {

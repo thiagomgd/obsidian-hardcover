@@ -58,6 +58,10 @@ describe("SettingsMigrationService", () => {
 				dataSourcePreferences: DEFAULT_SETTINGS.dataSourcePreferences,
 				statusMapping: { 1: "Want to Read", 3: "Finished" },
 				filenameTemplate: "${title} by ${authors}",
+				groupAuthorTargetFolder: DEFAULT_SETTINGS.groupAuthorTargetFolder,
+				groupSeriesTargetFolder: DEFAULT_SETTINGS.groupSeriesTargetFolder,
+				groupAuthorFilenameTemplate: DEFAULT_SETTINGS.groupAuthorFilenameTemplate,
+				groupSeriesFilenameTemplate: DEFAULT_SETTINGS.groupSeriesFilenameTemplate,
 			} as PluginSettings;
 
 			const result = SettingsMigrationService.migrateSettings(userSettings);

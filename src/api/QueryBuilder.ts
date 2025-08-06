@@ -108,6 +108,7 @@ export class QueryBuilder {
 			fields.push(`book_series {
 				series {
 					name
+					id
 				}
 				position
     	}`);

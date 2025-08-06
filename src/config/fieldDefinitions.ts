@@ -74,4 +74,31 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
 		name: "Read Years",
 		description: "List of years when the book was read",
 	},
+	// GROUPED_NOTE_FIELDS 
+	{
+		key: "bookCount",
+		name: "Book Count",
+		description: "Total books for Author/Series",
+	}, 
+	{
+		key: "bookCountShelves",
+		name: "Book Count Shelves",
+		description: "Total books in user shelves for Author/Series",
+	}, 
+	{
+		key: "bookCountRead",
+		name: "Book Count Read",
+		description: "Total books read for Author/Series",
+	}, 
+	{
+		key: "bookCountToRead",
+		name: "Book Count To Read",
+		description: "Total books to read for Author/Series",
+	}, 
+	{
+		key: "bookCountDNF",
+		name: "Book Count DNF",
+		description: "Total books DNF for Author/Series",
+	}, 
+	// END GROUPED_NOTE_FIELDS
 ];

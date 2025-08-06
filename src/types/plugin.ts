@@ -22,7 +22,11 @@ export interface PluginSettings {
 	};
 
 	targetFolder: string;
+	groupAuthorTargetFolder: string;
+	groupSeriesTargetFolder: string;
 	filenameTemplate: string;
+	groupAuthorFilenameTemplate: string;
+	groupSeriesFilenameTemplate: string;
 }
 
 type DataSource = "book" | "edition";
@@ -64,6 +68,13 @@ export interface FieldsSettings {
 	totalReads: FieldConfig;
 
 	readYears: FieldConfig;
+
+	// grouped note specific fields
+	bookCount: FieldConfig;
+	bookCountShelves: FieldConfig;
+	bookCountRead: FieldConfig;
+	bookCountToRead: FieldConfig;
+	bookCountDNF: FieldConfig;
 }
 
 export interface FieldDefinition {
@@ -83,4 +94,29 @@ export interface BookMetadata {
 	};
 	// allow for dynamic properties based on user custom property names
 	[key: string]: any;
+}
+
+export interface GroupedCommonMetadata {
+	bookCount?: number;
+	bookCountShelves?: number;
+	bookCountRead?: number;
+	bookCountToRead?: number;
+	bodyContent: {
+		name?: string;
+		authorUrl?: string;
+		// list of books by this author, sorted by release date ascending
+		books?: BookMetadata[];
+	};
+	// allow for dynamic properties based on user custom property names
+	[key: string]: any;
+}
+
+export interface AuthorMetadata extends GroupedCommonMetadata {
+	hardcoverAuthorId: number;
+	authorName: string;
+}
+
+export interface SeriesMetadata extends GroupedCommonMetadata {
+	hardcoverSeriesId: number;
+	seriesName: string;
 }

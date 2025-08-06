@@ -24,6 +24,7 @@ export function renderFieldSettings(
 	});
 
 	FIELD_DEFINITIONS.forEach((field) => {
+		console.log("Rendering field settings for:", field);
 		const contentEl = accordion.renderAccordionField(
 			fieldGroupsContainer,
 			field

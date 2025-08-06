@@ -1,9 +1,9 @@
 import { TFile, Vault } from "obsidian";
-import { CONTENT_DELIMITER } from "src/config/constants";
+import { CONTENT_DELIMITER, GROUPED_NOTE_BOOK_TEMPLATE, GROUPED_NOTE_TEMPLATE, REVIEW_TEMPLATE } from "src/config/constants";
 import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
 
 import ObsidianHardcover from "src/main";
-import { ActivityDateFieldConfig, BookMetadata } from "src/types";
+import { ActivityDateFieldConfig, AuthorMetadata, BookMetadata, SeriesMetadata } from "src/types";
 import { FileUtils } from "src/utils/FileUtils";
 
 export class NoteService {
@@ -197,6 +197,20 @@ export class NoteService {
 			);
 		}
 
+		// for grouped notes add hardcoverAuthorId as the first property
+		if (frontmatterData.hardcoverAuthorId !== undefined) {
+			frontmatterEntries.push(
+				`hardcoverAuthorId: ${frontmatterData.hardcoverAuthorId}`
+			);
+		}
+
+		// for grouped notes add hardcoverSeriesId as the first property
+		if (frontmatterData.hardcoverSeriesId !== undefined) {
+			frontmatterEntries.push(
+				`hardcoverSeriesId: ${frontmatterData.hardcoverSeriesId}`
+			);
+		}
+
 		// add all other properties in the order defined in FIELD_DEFINITIONS
 		const allFieldPropertyNames = FIELD_DEFINITIONS.flatMap((field) => {
 			const fieldSettings = this.plugin.settings.fieldsSettings[field.key];
@@ -254,6 +268,8 @@ export class NoteService {
 
 		return frontmatterEntries.join("\n");
 	}
+
+
 
 	private formatReviewText(reviewText: string): string {
 		if (!reviewText) return "";
@@ -323,4 +339,354 @@ export class NoteService {
 			return null;
 		}
 	}
+
+	// FUNCTIONALITY FOR GROUPED NOTES
+	async createAuthorNote(authorMetadata: AuthorMetadata): Promise<TFile | null> {
+		try {
+			const filename = this.fileUtils.processFilenameTemplate(
+				this.plugin.settings.groupAuthorFilenameTemplate,
+				authorMetadata
+			);
+
+			const targetFolder = this.fileUtils.normalizePath(
+				this.plugin.settings.groupAuthorTargetFolder
+			);
+			await this.ensureFolderExists(targetFolder);
+			const fullPath = targetFolder ? `${targetFolder}/${filename}` : filename;
+
+			// create frontmatter and full note content with delimiter
+			const frontmatter = this.createGroupedFrontmatter(authorMetadata);
+			console.log("Creating author note with frontmatter:", frontmatter);
+			const noteContent = this.createGroupedNoteContent(frontmatter, authorMetadata.bodyContent.books || []);
+
+			let file;
+			if (await this.vault.adapter.exists(fullPath)) {
+				// if file exists, write to it and then get the file reference
+				await this.vault.adapter.write(fullPath, noteContent);
+				file = this.vault.getAbstractFileByPath(fullPath) as TFile;
+				console.log(`Updated note: ${fullPath}`);
+			} else {
+				// create new file
+				file = await this.vault.create(fullPath, noteContent);
+				console.log(`Created note: ${fullPath}`);
+			}
+
+			return file;
+		} catch (error) {
+			console.error("Error creating note:", error);
+			return null;
+		}
+	}
+
+	// TOOD: join the two functions into one (author/series)
+	async createSeriesNote(seriesMetadata: SeriesMetadata): Promise<TFile | null> {
+		try {
+			const filename = this.fileUtils.processFilenameTemplate(
+				this.plugin.settings.groupSeriesFilenameTemplate,
+				seriesMetadata
+			);
+
+			const targetFolder = this.fileUtils.normalizePath(
+				this.plugin.settings.groupSeriesTargetFolder
+			);
+			await this.ensureFolderExists(targetFolder);
+			const fullPath = targetFolder ? `${targetFolder}/${filename}` : filename;
+
+			// create frontmatter and full note content with delimiter
+			const frontmatter = this.createGroupedFrontmatter(seriesMetadata);
+			console.log("Creating author note with frontmatter:", frontmatter);
+			const noteContent = this.createGroupedNoteContent(frontmatter, seriesMetadata.bodyContent.books || []);
+
+			let file;
+			if (await this.vault.adapter.exists(fullPath)) {
+				// if file exists, write to it and then get the file reference
+				await this.vault.adapter.write(fullPath, noteContent);
+				file = this.vault.getAbstractFileByPath(fullPath) as TFile;
+				console.log(`Updated note: ${fullPath}`);
+			} else {
+				// create new file
+				file = await this.vault.create(fullPath, noteContent);
+				console.log(`Created note: ${fullPath}`);
+			}
+
+			return file;
+		} catch (error) {
+			console.error("Error creating note:", error);
+			return null;
+		}
+	}
+
+	async findNoteByHardcoverAuthorId(hardcoverAuthorId: number): Promise<TFile | null> {
+		try {
+			const folderPath = this.plugin.settings.groupAuthorTargetFolder;
+
+			const folderExists = await this.vault.adapter.exists(folderPath);
+			if (!folderExists) {
+				console.log(`Specified target folder doesn't exist: ${folderPath}`);
+				return null;
+			}
+
+			// get all markdown files in the folder
+			const folder = this.vault.getFolderByPath(folderPath);
+			if (!folder) {
+				console.log(`Couldn't get folder object for: ${folderPath}`);
+				return null;
+			}
+
+			// search through files in the folder
+			for (const file of folder.children) {
+				// only check markdown files
+				if (file instanceof TFile && file.extension === "md") {
+					const content = await this.vault.read(file);
+
+					// check if it has frontmatter
+					const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+					if (frontmatterMatch) {
+						const frontmatter = frontmatterMatch[1];
+
+						// check if hardcoverBookId matches
+						const idMatch = frontmatter.match(/hardcoverAuthorId:\s*(\d+)/);
+						if (idMatch && parseInt(idMatch[1]) === hardcoverAuthorId) {
+							return file;
+						}
+					}
+				}
+			}
+
+			return null;
+		} catch (error) {
+			console.error(
+				`Error finding note by Hardcover Author ID ${hardcoverAuthorId}:`,
+				error
+			);
+			return null;
+		}
+	}
+
+	async findNoteByHardcoverSeriesId(hardcoverSeriesId: number): Promise<TFile | null> {
+		// TODO: allow multiple folders, so user can separate books, light novels, manga, comics, etc...
+		try {
+			const folderPath = this.plugin.settings.groupSeriesTargetFolder;
+
+			const folderExists = await this.vault.adapter.exists(folderPath);
+			if (!folderExists) {
+				console.log(`Specified target folder doesn't exist: ${folderPath}`);
+				return null;
+			}
+
+			// get all markdown files in the folder
+			const folder = this.vault.getFolderByPath(folderPath);
+			if (!folder) {
+				console.log(`Couldn't get folder object for: ${folderPath}`);
+				return null;
+			}
+
+			// search through files in the folder
+			for (const file of folder.children) {
+				// only check markdown files
+				if (file instanceof TFile && file.extension === "md") {
+					const content = await this.vault.read(file);
+
+					// check if it has frontmatter
+					const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+					if (frontmatterMatch) {
+						const frontmatter = frontmatterMatch[1];
+
+						// check if hardcoverBookId matches
+						const idMatch = frontmatter.match(/hardcoverSeriesId:\s*(\d+)/);
+						if (idMatch && parseInt(idMatch[1]) === hardcoverSeriesId) {
+							return file;
+						}
+					}
+				}
+			}
+
+			return null;
+		} catch (error) {
+			console.error(
+				`Error finding note by Hardcover Series ID ${hardcoverSeriesId}:`,
+				error
+			);
+			return null;
+		}
+	}
+
+	private createGroupedNoteContent(frontmatter: string, bookMetadata: BookMetadata[]): string {
+		let frontmatterStr = this.getFrontmatterString(frontmatter);
+		let content = GROUPED_NOTE_TEMPLATE.replace("{{frontmatter}}", frontmatterStr);
+
+		const booksContents: string[] = [];
+
+		for (const book of bookMetadata) {
+			console.log("Processing book in author note:", book);
+			let bookContent = GROUPED_NOTE_BOOK_TEMPLATE;
+
+			bookContent = bookContent.replace(/{{bookId}}/g, book.hardcoverBookId.toString());
+
+			// add title
+			const title = this.getBookTitle(book);
+			bookContent = bookContent.replace(/{{title}}/g, title);
+			// const escapedTitle = this.fileUtils.escapeMarkdownCharacters(title);
+			// content += `# ${escapedTitle}\n\n`;
+
+			// add book cover if enabled
+			const hasCover =
+				this.plugin.settings.fieldsSettings.cover.enabled &&
+				book[this.plugin.settings.fieldsSettings.cover.propertyName];
+
+			if (hasCover) {
+				const coverProperty =
+					this.plugin.settings.fieldsSettings.cover.propertyName;
+				bookContent = bookContent.replace(/{{cover}}/g, book[coverProperty]);
+			}
+
+			// add description if available
+			const hasDescription =
+				this.plugin.settings.fieldsSettings.description.enabled &&
+				book[
+					this.plugin.settings.fieldsSettings.description.propertyName
+				];
+
+			if (hasDescription) {
+				const descProperty =
+					this.plugin.settings.fieldsSettings.description.propertyName;
+				// add extra spacing if there is a cover above
+
+				bookContent = bookContent.replace(/{{description}}/g, book[descProperty]) // += `${spacing}${book[descProperty]}\n\n`;
+			}
+
+			if (
+				this.plugin.settings.fieldsSettings.review.enabled &&
+				book.bodyContent.review
+			) {
+				const formattedReview = this.formatReviewText(
+					book.bodyContent.review
+				);
+				let myReview = REVIEW_TEMPLATE;
+				myReview = myReview.replace(/{{review}}/g, formattedReview);
+				bookContent = bookContent.replace(/{{myReview}}/g, myReview);
+			} else {
+				bookContent = bookContent.replace(/{{myReview}}/g, "");
+			}
+
+			bookContent = bookContent.replace(/{{hardcoverUrl}}/g, book.url ? `["Hardcover.app"](${book.url})` : "");
+			bookContent = bookContent.replace(/{{genres}}/g, (book.genres || []).join(", "));
+			bookContent = bookContent.replace(/{{status}}/g, (book.status || []).join(", "));
+			
+			booksContents.push(bookContent);
+		}
+		
+		return content.replace(/{{booksContents}}/g, booksContents.join("\n\n"));
+
+	}
+
+	private createGroupedFrontmatter(metadata: Record<string, any>): string {
+		// exclude bodyContent from frontmatter
+		const { bodyContent, ...frontmatterData } = metadata;
+		console.log("Creating grouped frontmatter with data:", frontmatterData);
+		const frontmatterEntries: string[] = [];
+
+		// first add hardcoverBookId as the first property
+		if (frontmatterData.hardcoverBookId !== undefined) {
+			frontmatterEntries.push(
+				`hardcoverBookId: ${frontmatterData.hardcoverBookId}`
+			);
+		}
+
+		// for grouped notes add hardcoverAuthorId as the first property
+		if (frontmatterData.hardcoverAuthorId !== undefined) {
+			frontmatterEntries.push(
+				`hardcoverAuthorId: ${frontmatterData.hardcoverAuthorId}`
+			);
+		}
+
+		// for grouped notes add hardcoverSeriesId as the first property
+		if (frontmatterData.hardcoverSeriesId !== undefined) {
+			frontmatterEntries.push(
+				`hardcoverSeriesId: ${frontmatterData.hardcoverSeriesId}`
+			);
+		}
+
+		// add all other properties in the order defined in FIELD_DEFINITIONS
+		const allFieldPropertyNames = FIELD_DEFINITIONS.flatMap((field) => {
+			const fieldSettings = this.plugin.settings.fieldsSettings[field.key];
+
+			const propertyNames = [fieldSettings.propertyName];
+
+			// add start/end property names for activity date fields
+			if (field.isActivityDateField) {
+				const activityField = fieldSettings as ActivityDateFieldConfig;
+				propertyNames.push(
+					activityField.startPropertyName,
+					activityField.endPropertyName
+				);
+			}
+
+			return propertyNames;
+		});
+
+		// add properties in the defined order
+		for (const propName of allFieldPropertyNames) {
+			if (!frontmatterData.hasOwnProperty(propName)) continue;
+
+			// skip hardcoverBookId as we already added it
+			if (propName === "hardcoverBookId") continue;
+
+			const value = frontmatterData[propName];
+
+			// skip undefined/null values
+			if (value === undefined || value === null) continue;
+
+			if (Array.isArray(value)) {
+				frontmatterEntries.push(`${propName}: ${JSON.stringify(value)}`);
+			} else if (typeof value === "string") {
+				if (
+					propName ===
+					this.plugin.settings.fieldsSettings.description.propertyName
+				) {
+					// remove all \n sequences and replace with spaces to avoid frontmatter issues
+					const cleanValue = value.replace(/\\n/g, " ").trim();
+					// remove any multiple spaces that might result
+					const finalValue = cleanValue.replace(/\s+/g, " ");
+					frontmatterEntries.push(
+						`${propName}: "${finalValue.replace(/"/g, '\\"')}"`
+					);
+				} else {
+					// for other string fields, just escape quotes
+					frontmatterEntries.push(
+						`${propName}: "${value.replace(/"/g, '\\"')}"`
+					);
+				}
+			} else {
+				frontmatterEntries.push(`${propName}: ${value}`);
+			}
+		}
+
+		return frontmatterEntries.join("\n");
+	}
 }
+
+
+// {
+//     "hardcoverBookId": 435731,
+//     "bodyContent": {
+//         "title": "Ghostwritten",
+//         "coverUrl": "https://assets.hardcover.app/external_data/59386766/2054b59cc8a6bdf036acb455e0227432bf673d51.jpeg"
+//     },
+//     "title": "Ghostwritten",
+//     "status": [
+//         "Want to Read"
+//     ],
+//     "cover": "https://assets.hardcover.app/external_data/59386766/2054b59cc8a6bdf036acb455e0227432bf673d51.jpeg",
+//     "authors": [
+//         "David Mitchell"
+//     ],
+//     "releaseDate": "1999-08-19",
+//     "description": "'ONE OF THE MOST BRILLIANTLY INVENTIVE WRITERS OF THIS, OR ANY, COUNTRY' INDEPENDENT Winner of the Mail on Sunday/John Llewellyn Rhys Prize 'Astonishingly accomplished' THE TIMES 'Remarkable' OBSERVER 'Gripping' NEW YORK TIMES 'Fabulously atmospheric' GUARDIAN 'Engrossing' DAILY MAIL A magnificent achievement and an engrossing experience, David Mitchell's first novel announced the arrival of one of the most exciting writers of the twenty-first century. An apocalyptic cult member carries out a gas attack on a rush-hour metro, but what links him to a jazz buff in downtown Tokyo? Or to a Mongolian gangster, a woman on a holy mountain who talks to a tree, and a late night New York DJ? Set at the fugitive edges of Asia and Europe, Ghostwritten weaves together a host of characters, their interconnected destinies determined by the inescapable forces of cause and effect. PRAISE FOR DAVID MITCHELL 'A thrilling and gifted writer' FINANCIAL TIMES 'Dizzyingly, dazzlingly good' DAILY MAIL 'Mitchell is, clearly, a genius' NEW YORK TIMES BOOK REVIEW 'An author of extraordinary ambition and skill' INDEPENDENT ON SUNDAY 'A superb storyteller' THE NEW YORKER",
+//     "url": "https://hardcover.app/books/ghostwritten",
+//     "genres": [
+//         "Fantasy",
+//         "Fiction",
+//         "Science fiction"
+//     ]
+// }

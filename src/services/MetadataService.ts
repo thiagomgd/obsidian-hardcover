@@ -1,10 +1,12 @@
 import { HARDCOVER_BOOKS_ROUTE, HARDCOVER_URL } from "src/config/constants";
 import {
+	AuthorMetadata,
 	BookMetadata,
 	HardcoverBookSeries,
 	HardcoverUserBook,
 	HardcoverUserBooksReads,
 	PluginSettings,
+	SeriesMetadata,
 } from "src/types";
 
 export class MetadataService {
@@ -202,6 +204,60 @@ export class MetadataService {
 			// add read years
 			if (fieldsSettings.readYears.enabled && activity.readYears.length > 0) {
 				metadata[fieldsSettings.readYears.propertyName] = activity.readYears;
+			}
+		}
+
+		return metadata;
+	}
+
+	public buildGroupedMetadata(
+		type: "author" | "series",
+		id: number,
+		name: string,
+		books: HardcoverUserBook[]
+	): AuthorMetadata | SeriesMetadata{
+		let metadata: AuthorMetadata | SeriesMetadata;
+
+		if (type === "author") {
+			metadata = {
+				hardcoverAuthorId: id,
+				authorName: name,
+				bodyContent: {},
+			};
+		} else {
+			 metadata = {
+				hardcoverSeriesId: id,
+				seriesName: name,
+				bodyContent: {},
+			};
+		}
+
+		if (books.length === 0) {
+			return metadata; // no books, return empty metadata
+		}
+
+		metadata.bodyContent.name = name;
+		metadata.bodyContent.books = [];
+
+		metadata.bookCount = 0; // will be updated in separate process to sync author/series;
+		metadata.bookCountShelves = books.length;
+		metadata.bookCountRead = 0;
+		metadata.bookCountToRead = 0;
+		metadata.bookCountDNF = 0;
+
+		for (const book of books) {
+			const bookMetadata = this.buildMetadata(book);
+			metadata.bodyContent.books.push(bookMetadata);
+
+			if (book.status_id === 2) {
+				// status_id 2 is "Read"
+				metadata.bookCountRead = (metadata.bookCountRead || 0) + 1;
+			} else if (book.status_id === 1) {
+				// status_id 1 is "To Read"
+				metadata.bookCountToRead = (metadata.bookCountToRead || 0) + 1;
+			} else if (book.status_id === 5) {
+				// status_id 5 is "Did Not Finish"
+				metadata.bookCountDNF = (metadata.bookCountDNF || 0) + 1;
 			}
 		}
 
