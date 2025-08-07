@@ -1,6 +1,7 @@
 import { FileManager, TFile, Vault } from "obsidian";
 import { CONTENT_DELIMITER, GROUPED_CONTENT_START, GROUPED_NOTE_BOOK_TEMPLATE, GROUPED_NOTE_TEMPLATE, REVIEW_TEMPLATE } from "src/config/constants";
 import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
+import { HARDCOVER_STATUS_MAP_REVERSE } from "src/config/statusMapping";
 
 import ObsidianHardcover from "src/main";
 import { ActivityDateFieldConfig, AuthorMetadata, BookMetadata, SeriesMetadata } from "src/types";
@@ -637,6 +638,7 @@ export class NoteService {
 			return propertyNames;
 		});
 
+
 		// add properties in the defined order
 		for (const propName of allFieldPropertyNames) {
 			if (!frontmatterData.hasOwnProperty(propName)) continue;
@@ -682,22 +684,25 @@ export class NoteService {
 		existingFile: TFile
 	): Promise<TFile | null> {
 		try {
+			// create arrays for each status if enabled in settings
+			const { fieldsSettings } = this.plugin.settings;
+
 			// const originalPath = existingFile.path;
 			const existingContent = await this.vault.read(existingFile);
-			const booksToStatus: Record<number, number> = {
+			const booksToStatus: Record<string, number> = {
 				
 			};
 			this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
-				for (const id of frontmatter['books-to-read'] || []) {
+				for (const id of frontmatter[fieldsSettings.booksToRead.propertyName] || []) {
 					booksToStatus[id] = 1;
 				}
-				for (const id of frontmatter['books-reading'] || []) {
+				for (const id of frontmatter[fieldsSettings.booksReading.propertyName] || []) {
 					booksToStatus[id] = 2;
 				}
-				for (const id of frontmatter['books-read'] || []) {
+				for (const id of frontmatter[fieldsSettings.booksRead.propertyName] || []) {
 					booksToStatus[id] = 3;
 				}
-				for (const id of frontmatter['books-dnf'] || []) {
+				for (const id of frontmatter[fieldsSettings.booksDNF.propertyName] || []) {
 					booksToStatus[id] = 5;
 				}
 			});
@@ -716,11 +721,11 @@ export class NoteService {
 				return null;
 			}
 
-			const existingBooks: Record<number, { sortNumber: number; content: string }> = {};
+			const existingBooks: Record<string, { sortNumber: number; content: string }> = {};
 			const bookRegex = /<!-- obsidian-hardcover-book-(\d+)-start (\d+) -->([\s\S]*?)<!-- obsidian-hardcover-book-\1-end -->/g;
 			let match;
 			while ((match = bookRegex.exec(pluginContent)) !== null) {
-				const bookId = Number(match[1]);
+				const bookId = match[1];
 				existingBooks[bookId] = {
 					sortNumber: Number(match[2]),
 					content: match[3].trim(),
@@ -730,16 +735,20 @@ export class NoteService {
 			console.log("Existing books in note:", existingFile.name, existingBooks);
 
 			for (const book of bookMetadata) {
-				let existingContent = existingBooks[book.hardcoverBookId]?.content || "";
+				const stringBookId = book.hardcoverBookId.toString();
+				let existingContent = existingBooks[stringBookId]?.content || "";
 				const newContent = this.groupedNoteBookContent(book, existingContent);
 				const sortNumber = book.groupInformationSeries?.seriesPosition || book.groupInformationAuthor?.releaseYear || 0;
 				
-				existingBooks[book.hardcoverBookId] = {
+				existingBooks[stringBookId] = {
 					content: newContent,
 					sortNumber: sortNumber
 				}
 
-				booksToStatus[book.hardcoverBookId] = book.status_id;
+				const status = Array.isArray(book.status) ? book.status[0] : book.status;
+				if (typeof status === "string" && status in HARDCOVER_STATUS_MAP_REVERSE) {
+					booksToStatus[stringBookId] = HARDCOVER_STATUS_MAP_REVERSE[status as keyof typeof HARDCOVER_STATUS_MAP_REVERSE];
+				}
 			}
 
 			const newGroupedBookContent = Object.entries(existingBooks)
@@ -754,41 +763,47 @@ export class NoteService {
 			await this.vault.modify(existingFile, newContent);
 
 
-			const booksPerStatus: Record<string, number[]> = {
-				'books-to-read': [],
-				'books-reading': [],
-				'books-read': [],
-				'books-dnf': [],
+			const booksPerStatus: Record<string, string[]> = {
 			};
+			if (fieldsSettings.booksToRead.enabled) {
+				booksPerStatus[fieldsSettings.booksToRead.propertyName] = [];
+			}
+			if (fieldsSettings.booksReading.enabled) {
+				booksPerStatus[fieldsSettings.booksReading.propertyName] = [];
+			}
+			if (fieldsSettings.booksRead.enabled) {
+				booksPerStatus[fieldsSettings.booksRead.propertyName] = [];
+			}
+			if (fieldsSettings.booksDNF.enabled) {
+				booksPerStatus[fieldsSettings.booksDNF.propertyName] = [];
+			}
+
 			let totalBooks = 0;
 			for (const [bookId, statusId] of Object.entries(booksToStatus)) {
-				let statusString;
 				totalBooks++;
 				switch (statusId) {
 					case 1: // Want to Read
-						statusString = "books-to-read";
+						booksPerStatus[fieldsSettings.booksToRead.propertyName]?.push(bookId);
 						break;
 					case 2: // Currently Reading
-						statusString = "books-reading";
+						booksPerStatus[fieldsSettings.booksReading.propertyName]?.push(bookId);
 						break;
 					case 3: // Read
-						statusString = "books-read";
+						booksPerStatus[fieldsSettings.booksRead.propertyName]?.push(bookId);
 						break;
 					case 5: // Did Not Finish
-						statusString = "books-dnf";
+						booksPerStatus[fieldsSettings.booksDNF.propertyName]?.push(bookId);
 						break;
-					default:
-						continue; // skip unknown statuses
-				}
-				if (!statusString) continue;
-				booksPerStatus[statusString].push(Number(bookId));
+				}	
 			}
 
 			this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
 				for (const [statusString, ids] of Object.entries(booksPerStatus)) {
 					frontmatter[statusString] = ids;
 				}
-				frontmatter['book-count'] = totalBooks;
+				if (fieldsSettings.bookCount.enabled) { 
+					frontmatter[fieldsSettings.bookCount.propertyName] = totalBooks;
+				}
 			});
 
 			return existingFile;

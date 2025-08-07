@@ -20,7 +20,6 @@ export class FileUtils {
 	}
 
 	processFilenameTemplate(template: string, metadata: any): string {
-		console.log("Processing filename template:", template, metadata);
 		let filename = template;
 
 		if (metadata.title) {

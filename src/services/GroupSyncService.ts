@@ -239,9 +239,8 @@ export class GroupSyncService {
 
 					if (existingNote) {
 						// update existing note
-						// await noteService.updateNote(metadata, existingNote);
-						// updatedNotesCount++;
-						console.log("Author note already exists, skipping creation.");
+						await noteService.updateGroupedNote(seriesObj.books, existingNote);
+						updatedNotesCount++;
 					} else {
 						// create new note
 						await noteService.createSeriesNote(metadata as SeriesMetadata);
@@ -277,7 +276,6 @@ export class GroupSyncService {
 						// update existing note
 						await noteService.updateGroupedNote(authorObj.books, existingNote);
 						updatedNotesCount++;
-						console.log("Author note already exists, skipping creation.");
 					} else {
 						// create new note
 						await noteService.createAuthorNote(metadata as AuthorMetadata);

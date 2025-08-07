@@ -1,4 +1,5 @@
 import { HARDCOVER_BOOKS_ROUTE, HARDCOVER_URL } from "src/config/constants";
+import { HARDCOVER_STATUS_MAP_REVERSE } from "src/config/statusMapping";
 import {
 	AuthorMetadata,
 	BookMetadata,
@@ -272,11 +273,24 @@ export class MetadataService {
 		metadata.bodyContent.name = name;
 		metadata.bodyContent.books = [];
 
-		metadata.bookCount = 0; // this might be updated in another process for the total books on hardcover
-		metadata.booksToRead = [];
-		metadata.booksReading = [];
-		metadata.booksRead = [];
-		metadata.booksDNF = [];
+
+		// create arrays for each status if enabled in settings
+		const { fieldsSettings } = this.settings;
+		if (fieldsSettings.bookCount.enabled) {
+			metadata[fieldsSettings.bookCount.propertyName] = 0;
+		}
+		if (fieldsSettings.booksToRead.enabled) {
+			metadata[fieldsSettings.booksToRead.propertyName] = [];
+		}
+		if (fieldsSettings.booksReading.enabled) {
+			metadata[fieldsSettings.booksReading.propertyName] = [];
+		}
+		if (fieldsSettings.booksRead.enabled) {
+			metadata[fieldsSettings.booksRead.propertyName] = [];
+		}
+		if (fieldsSettings.booksDNF.enabled) {
+			metadata[fieldsSettings.booksDNF.propertyName] = [];
+		}
 
 		for (const book of books) {
 			metadata.bodyContent.books.push(book);
@@ -284,21 +298,26 @@ export class MetadataService {
 			// "2": "Currently Reading",
 			// "3": "Read",
 			// "5": "Did Not Finish"
-			switch (book.status_id) {	
+			// TODO: fix mess
+			const statusKey = Array.isArray(book.status) ? book.status[0] as keyof typeof HARDCOVER_STATUS_MAP_REVERSE : book.status as keyof typeof HARDCOVER_STATUS_MAP_REVERSE;
+			const statusId: number = HARDCOVER_STATUS_MAP_REVERSE[statusKey];
+
+			const strId = book.hardcoverBookId.toString();
+			switch (statusId) {	
 				case 1: // Want to Read
-					metadata.booksToRead.push(book);
+					metadata[fieldsSettings.booksToRead.propertyName]?.push(strId);
 					break;
 				case 2: // Currently Reading
-					metadata.booksReading.push(book);
+					metadata[fieldsSettings.booksReading.propertyName]?.push(strId);
 					break;
 				case 3: // Read
-					metadata.booksRead.push(book);
+					metadata[fieldsSettings.booksRead.propertyName]?.push(strId);
 					break;
 				case 5: // Did Not Finish
-					metadata.booksDNF.push(book);
+					metadata[fieldsSettings.booksDNF.propertyName]?.push(strId);
 					break;
 			}
-			metadata.bookCount++;
+			fieldsSettings.bookCount.enabled && metadata[fieldsSettings.bookCount.propertyName]++;
 		}
 			
 
