@@ -270,6 +270,9 @@ export class MetadataService {
 			return metadata; // no books, return empty metadata
 		}
 
+		if (this.settings.groupAddAliases) {
+			metadata.aliases = [];
+		}
 		metadata.bodyContent.name = name;
 		metadata.bodyContent.books = [];
 
@@ -318,9 +321,12 @@ export class MetadataService {
 					break;
 			}
 			fieldsSettings.bookCount.enabled && metadata[fieldsSettings.bookCount.propertyName]++;
+			if (this.settings.groupAddAliases && book.bodyContent.title) {
+				// add book title as alias
+				metadata.aliases?.push(book.bodyContent.title);
+			}
 		}
 			
-
 		return metadata;
 	}
 

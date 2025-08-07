@@ -642,6 +642,16 @@ export class NoteService {
 			return propertyNames;
 		});
 
+		if (this.plugin.settings.dateCreatedPropertyName) {
+			allFieldPropertyNames.push(
+				this.plugin.settings.dateCreatedPropertyName
+			);
+			frontmatterData[this.plugin.settings.dateCreatedPropertyName] = new Date().toISOString();
+		}
+
+		if (this.plugin.settings.groupAddAliases && frontmatterData.aliases) {
+			allFieldPropertyNames.push('aliases');
+		}
 
 		// add properties in the defined order
 		for (const propName of allFieldPropertyNames) {
@@ -689,13 +699,14 @@ export class NoteService {
 	): Promise<TFile | null> {
 		try {
 			// create arrays for each status if enabled in settings
-			const { fieldsSettings } = this.plugin.settings;
+			const { fieldsSettings, dateModifiedPropertyName, groupAddAliases } = this.plugin.settings;
 
 			// const originalPath = existingFile.path;
 			const existingContent = await this.vault.read(existingFile);
-			const booksToStatus: Record<string, number> = {
-				
-			};
+			
+			const aliases: string[] = [];
+			const booksToStatus: Record<string, number> = {};
+
 			this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
 				for (const id of frontmatter[fieldsSettings.booksToRead.propertyName] || []) {
 					booksToStatus[id] = 1;
@@ -709,9 +720,10 @@ export class NoteService {
 				for (const id of frontmatter[fieldsSettings.booksDNF.propertyName] || []) {
 					booksToStatus[id] = 5;
 				}
+				aliases.push(...(frontmatter.aliases || []));
 			});
 
-			console.log("Updating grouped note:", existingFile.name);
+			// console.log("Updating grouped note:", existingFile.name);
 			let pluginContent = '';
 			const startIdx = existingContent.indexOf(GROUPED_CONTENT_START);
 			const endIdx = existingContent.indexOf(CONTENT_DELIMITER);
@@ -736,7 +748,7 @@ export class NoteService {
 				};
 			}
 
-			console.log("Existing books in note:", existingFile.name, existingBooks);
+			// console.log("Existing books in note:", existingFile.name, existingBooks);
 
 			for (const book of bookMetadata) {
 				const stringBookId = book.hardcoverBookId.toString();
@@ -753,6 +765,8 @@ export class NoteService {
 				if (typeof status === "string" && status in HARDCOVER_STATUS_MAP_REVERSE) {
 					booksToStatus[stringBookId] = HARDCOVER_STATUS_MAP_REVERSE[status as keyof typeof HARDCOVER_STATUS_MAP_REVERSE];
 				}
+
+				aliases.push(book.title); // escape quotes for frontmatter
 			}
 
 			const newGroupedBookContent = Object.entries(existingBooks)
@@ -763,7 +777,7 @@ export class NoteService {
 				.join("\n\n");
 
 			const newContent = existingContent.substring(0, startIdx  + GROUPED_CONTENT_START.length) + newGroupedBookContent + existingContent.substring(endIdx);
-			console.log("New content for grouped note:", newContent);
+			// console.log("New content for grouped note:", newContent);
 			await this.vault.modify(existingFile, newContent);
 
 
@@ -807,6 +821,12 @@ export class NoteService {
 				}
 				if (fieldsSettings.bookCount.enabled) { 
 					frontmatter[fieldsSettings.bookCount.propertyName] = totalBooks;
+				}
+				if( groupAddAliases && frontmatter.aliases) {
+					frontmatter.aliases = [...new Set(aliases)];
+				}
+				if (dateModifiedPropertyName) {
+					frontmatter[dateModifiedPropertyName] = new Date().toISOString();
 				}
 			});
 

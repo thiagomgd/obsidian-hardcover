@@ -27,6 +27,9 @@ export interface PluginSettings {
 	filenameTemplate: string;
 	groupAuthorFilenameTemplate: string;
 	groupSeriesFilenameTemplate: string;
+	groupAddAliases: boolean; // whether to add aliases to grouped notes based on author/series names
+	dateCreatedPropertyName?: string; // optional property name for date created in frontmatter
+	dateModifiedPropertyName?: string; // optional property name for date modified in frontmatter
 }
 
 type DataSource = "book" | "edition";
@@ -75,6 +78,7 @@ export interface FieldsSettings {
 	booksReading: FieldConfig;
 	booksRead: FieldConfig;
 	booksDNF: FieldConfig;
+	
 }
 
 export interface FieldDefinition {
@@ -117,6 +121,7 @@ export interface GroupedCommonMetadata {
 		// list of books by this author, sorted by release date ascending
 		books?: BookMetadata[];
 	};
+	aliases?: string[]; // optional aliases for the series
 	// allow for dynamic properties based on user custom property names
 	[key: string]: any;
 }
@@ -129,4 +134,5 @@ export interface AuthorMetadata extends GroupedCommonMetadata {
 export interface SeriesMetadata extends GroupedCommonMetadata {
 	hardcoverSeriesId: number;
 	seriesName: string;
+	
 }

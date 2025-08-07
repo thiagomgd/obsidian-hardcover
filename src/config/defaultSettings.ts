@@ -68,4 +68,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	filenameTemplate: DEFAULT_FILENAME_FORMAT,
 	groupAuthorFilenameTemplate: DEFAULT_AUTHOR_FILENAME_FORMAT,
 	groupSeriesFilenameTemplate: DEFAULT_SERIES_FILENAME_FORMAT,
+	groupAddAliases: true, // whether to add aliases to grouped notes based on author/series names
+	dateCreatedPropertyName: "dateCreated", // optional property name for date created in frontmatter
+	dateModifiedPropertyName: "dateModified", // optional property name for date modified in frontmatter
 };
