@@ -10,8 +10,7 @@ export const HARDCOVER_BOOKS_ROUTE = "books";
 
 export const GROUPED_CONTENT_START = "<!-- obsidian-hardcover-plugin-start -->";
 export const CONTENT_DELIMITER = "<!-- obsidian-hardcover-plugin-end -->";
-export const GROUPED_NOTE_TEMPLATE = `{{frontmatter}}## Books
-
+export const GROUPED_NOTE_TEMPLATE = `{{frontmatter}}
 <!-- obsidian-hardcover-plugin-start -->
 {{booksContents}}
 <!-- obsidian-hardcover-plugin-end -->
@@ -21,13 +20,13 @@ export const GROUPED_NOTE_TEMPLATE = `{{frontmatter}}## Books
 // this is necessary so we can update the notes and insert new books in the right order
 export const GROUPED_NOTE_BOOK_TEMPLATE = `
 <!-- obsidian-hardcover-book-{{bookId}}-start {{sortNumber}} -->
-### {{title}}
+## {{title}}
 
 Status: {{status}}
 
 > [!figure-right-s] ![cover]({{cover}})
 
-> {{description}}
+{{description}}
 
 Genres: {{genres}}
 

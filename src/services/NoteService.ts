@@ -6,6 +6,7 @@ import { HARDCOVER_STATUS_MAP_REVERSE } from "src/config/statusMapping";
 import ObsidianHardcover from "src/main";
 import { ActivityDateFieldConfig, AuthorMetadata, BookMetadata, SeriesMetadata } from "src/types";
 import { FileUtils } from "src/utils/FileUtils";
+import { toMarkdownBlockquote } from "src/utils/formattingUtils";
 
 export class NoteService {
 	constructor(
@@ -359,7 +360,7 @@ export class NoteService {
 
 			// create frontmatter and full note content with delimiter
 			const frontmatter = this.createGroupedFrontmatter(authorMetadata);
-			console.log("Creating author note with frontmatter:", frontmatter);
+
 			const noteContent = this.createGroupedNoteContent(frontmatter, authorMetadata.bodyContent.books || []);
 
 			let file;
@@ -397,7 +398,7 @@ export class NoteService {
 
 			// create frontmatter and full note content with delimiter
 			const frontmatter = this.createGroupedFrontmatter(seriesMetadata);
-			console.log("Creating author note with frontmatter:", frontmatter);
+
 			const noteContent = this.createGroupedNoteContent(frontmatter, seriesMetadata.bodyContent.books || []);
 
 			let file;
@@ -548,13 +549,16 @@ export class NoteService {
 				this.plugin.settings.fieldsSettings.description.propertyName
 			];
 
+		let blockquoteDescription = ""
 		if (hasDescription) {
 			const descProperty =
 				this.plugin.settings.fieldsSettings.description.propertyName;
-			// add extra spacing if there is a cover above
 
-			bookContent = bookContent.replace(/{{description}}/g, book[descProperty]) // += `${spacing}${book[descProperty]}\n\n`;
+			// TODO: configurable
+			blockquoteDescription = toMarkdownBlockquote(book[descProperty]);
 		}
+		// add extra spacing if there is a cover above
+		bookContent = bookContent.replace(/{{description}}/g, blockquoteDescription) // += `${spacing}${book[descProperty]}\n\n`;
 
 		if (
 			this.plugin.settings.fieldsSettings.review.enabled &&
