@@ -81,24 +81,24 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
 		description: "Total books for Author/Series",
 	}, 
 	{
-		key: "bookCountShelves",
-		name: "Book Count Shelves",
-		description: "Total books in user shelves for Author/Series",
+		key: "booksToRead",
+		name: "Books To Read",
+		description: "books to read for Author/Series",
 	}, 
 	{
-		key: "bookCountRead",
-		name: "Book Count Read",
-		description: "Total books read for Author/Series",
+		key: "booksReading",
+		name: "Books Reading",
+		description: "books reading for Author/Series",
 	}, 
 	{
-		key: "bookCountToRead",
-		name: "Book Count To Read",
-		description: "Total books to read for Author/Series",
+		key: "booksRead",
+		name: "Books Read",
+		description: "books to read for Author/Series",
 	}, 
 	{
-		key: "bookCountDNF",
-		name: "Book Count DNF",
-		description: "Total books DNF for Author/Series",
+		key: "booksDNF",
+		name: "Books DNF",
+		description: "books DNF for Author/Series",
 	}, 
 	// END GROUPED_NOTE_FIELDS
 ];

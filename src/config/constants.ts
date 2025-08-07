@@ -10,8 +10,7 @@ export const HARDCOVER_BOOKS_ROUTE = "books";
 
 export const GROUPED_CONTENT_START = "<!-- obsidian-hardcover-plugin-start -->";
 export const CONTENT_DELIMITER = "<!-- obsidian-hardcover-plugin-end -->";
-export const GROUPED_NOTE_TEMPLATE = `{{frontmatter}}
-## Books
+export const GROUPED_NOTE_TEMPLATE = `{{frontmatter}}## Books
 
 <!-- obsidian-hardcover-plugin-start -->
 {{booksContents}}
@@ -35,7 +34,8 @@ Genres: {{genres}}
 {{hardcoverUrl}}
 
 {{myReview}}
-<!-- obsidian-hardcover-book-{bookId}-personal -->
+<!-- obsidian-hardcover-book-personal -->
+{{personalContent}}
 <!-- obsidian-hardcover-book-{bookId}-end -->
 `
 

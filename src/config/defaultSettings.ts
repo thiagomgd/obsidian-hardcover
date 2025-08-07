@@ -37,10 +37,10 @@ export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
 	totalReads: { enabled: true, propertyName: "totalReads" },
 	readYears: { enabled: false, propertyName: "readYears" },
 	bookCount: { enabled: true, propertyName: "bookCount" },
-	bookCountShelves: { enabled: true, propertyName: "bookCountShelves" },
-	bookCountRead: { enabled: true, propertyName: "bookCountRead" },
-	bookCountToRead: { enabled: true, propertyName: "bookCountToRead" },
-	bookCountDNF: { enabled: true, propertyName: "bookCountDNF" },
+	booksToRead: { enabled: true, propertyName: "booksToRead" },
+	booksReading: { enabled: true, propertyName: "booksReading" },
+	booksRead: { enabled: true, propertyName: "booksRead" },
+	booksDNF: { enabled: true, propertyName: "booksDNF" },
 };
 
 export const DEFAULT_FILENAME_FORMAT = "${title} (${year})";

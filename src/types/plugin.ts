@@ -71,10 +71,10 @@ export interface FieldsSettings {
 
 	// grouped note specific fields
 	bookCount: FieldConfig;
-	bookCountShelves: FieldConfig;
-	bookCountRead: FieldConfig;
-	bookCountToRead: FieldConfig;
-	bookCountDNF: FieldConfig;
+	booksToRead: FieldConfig;
+	booksReading: FieldConfig;
+	booksRead: FieldConfig;
+	booksDNF: FieldConfig;
 }
 
 export interface FieldDefinition {

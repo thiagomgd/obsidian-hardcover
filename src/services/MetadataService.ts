@@ -272,26 +272,35 @@ export class MetadataService {
 		metadata.bodyContent.name = name;
 		metadata.bodyContent.books = [];
 
-		metadata.bookCount = 0; // will be updated in separate process to sync author/series;
-		metadata.bookCountShelves = books.length;
-		metadata.bookCountRead = 0;
-		metadata.bookCountToRead = 0;
-		metadata.bookCountDNF = 0;
+		metadata.bookCount = 0; // this might be updated in another process for the total books on hardcover
+		metadata.booksToRead = [];
+		metadata.booksReading = [];
+		metadata.booksRead = [];
+		metadata.booksDNF = [];
 
 		for (const book of books) {
 			metadata.bodyContent.books.push(book);
-
-			if (book.status_id === 2) {
-				// status_id 2 is "Read"
-				metadata.bookCountRead = (metadata.bookCountRead || 0) + 1;
-			} else if (book.status_id === 1) {
-				// status_id 1 is "To Read"
-				metadata.bookCountToRead = (metadata.bookCountToRead || 0) + 1;
-			} else if (book.status_id === 5) {
-				// status_id 5 is "Did Not Finish"
-				metadata.bookCountDNF = (metadata.bookCountDNF || 0) + 1;
+			// "1": "Want to Read",
+			// "2": "Currently Reading",
+			// "3": "Read",
+			// "5": "Did Not Finish"
+			switch (book.status_id) {	
+				case 1: // Want to Read
+					metadata.booksToRead.push(book);
+					break;
+				case 2: // Currently Reading
+					metadata.booksReading.push(book);
+					break;
+				case 3: // Read
+					metadata.booksRead.push(book);
+					break;
+				case 5: // Did Not Finish
+					metadata.booksDNF.push(book);
+					break;
 			}
+			metadata.bookCount++;
 		}
+			
 
 		return metadata;
 	}
