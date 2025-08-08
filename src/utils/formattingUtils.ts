@@ -8,3 +8,11 @@ export function toMarkdownBlockquote(text: string): string {
   // Join the lines with newlines to form the final blockquote string
   return blockquoteLines.join('\n');
 }
+
+export function toKebabCase(str: string): string {
+  // Convert to lowercase, replace spaces and underscores with hyphens, and insert hyphens before uppercase letters
+  return str
+    .replace(/([a-z])([A-Z])/g, "$1-$2")
+    .replace(/[\s_]+/g, '-')
+    .toLowerCase();
+}

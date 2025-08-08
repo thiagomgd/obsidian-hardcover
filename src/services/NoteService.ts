@@ -1,12 +1,12 @@
 import { FileManager, TFile, Vault } from "obsidian";
-import { CONTENT_DELIMITER, GROUPED_CONTENT_START, GROUPED_NOTE_BOOK_TEMPLATE, GROUPED_NOTE_TEMPLATE, REVIEW_TEMPLATE } from "src/config/constants";
+import { AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE, AUTHOR_GROUPED_NOTE_TEMPLATE, CONTENT_DELIMITER, GROUPED_CONTENT_START, REVIEW_TEMPLATE, SERIES_GROUPED_GENRES_TEMPLATE, SERIES_GROUPED_NOTE_BOOK_TEMPLATE, SERIES_GROUPED_NOTE_TEMPLATE } from "src/config/constants";
 import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
 import { HARDCOVER_STATUS_MAP_REVERSE } from "src/config/statusMapping";
 
 import ObsidianHardcover from "src/main";
 import { ActivityDateFieldConfig, AuthorMetadata, BookMetadata, SeriesMetadata } from "src/types";
 import { FileUtils } from "src/utils/FileUtils";
-import { toMarkdownBlockquote } from "src/utils/formattingUtils";
+import { toKebabCase, toMarkdownBlockquote } from "src/utils/formattingUtils";
 
 export class NoteService {
 	constructor(
@@ -361,7 +361,7 @@ export class NoteService {
 			// create frontmatter and full note content with delimiter
 			const frontmatter = this.createGroupedFrontmatter(authorMetadata);
 
-			const noteContent = this.createGroupedNoteContent(frontmatter, authorMetadata.bodyContent.books || []);
+			const noteContent = this.createGroupedNoteContent("author", frontmatter, authorMetadata);
 
 			let file;
 			if (await this.vault.adapter.exists(fullPath)) {
@@ -399,7 +399,7 @@ export class NoteService {
 			// create frontmatter and full note content with delimiter
 			const frontmatter = this.createGroupedFrontmatter(seriesMetadata);
 
-			const noteContent = this.createGroupedNoteContent(frontmatter, seriesMetadata.bodyContent.books || []);
+			const noteContent = this.createGroupedNoteContent("series", frontmatter, seriesMetadata);
 
 			let file;
 			if (await this.vault.adapter.exists(fullPath)) {
@@ -515,10 +515,23 @@ export class NoteService {
 		}
 	}
 
-	private groupedNoteBookContent(book: BookMetadata, existingContent = ""): string {
+	private formatGenres(genres?: string[]): string[] {
+		if (!genres || genres.length === 0) return [];
+
+		if (this.plugin.settings.genresAsTags) {
+			return genres.map((genre) => {
+				const kebabGenre = toKebabCase(genre);
+				return this.plugin.settings.genresAsTags!.replace(/{{genre}}/g, kebabGenre);
+			});
+		}
+
+		return genres;
+	}
+
+	private groupedNoteBookContent(type: "series" | "author", book: BookMetadata, existingContent = ""): string {
 		const personalContent = existingContent?.split("<!-- obsidian-hardcover-book-personal -->")?.[1] || "";
 
-		let bookContent = GROUPED_NOTE_BOOK_TEMPLATE;
+		let bookContent = type === "series" ? SERIES_GROUPED_NOTE_BOOK_TEMPLATE : AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE;
 
 		bookContent = bookContent.replace(/{{bookId}}/g, book.hardcoverBookId.toString());
 
@@ -575,21 +588,34 @@ export class NoteService {
 		}
 
 		bookContent = bookContent.replace(/{{hardcoverUrl}}/g, book.url ? `[Hardcover.app](${book.url})` : "");
-		bookContent = bookContent.replace(/{{genres}}/g, (book.genres || []).join(", "));
+		bookContent = bookContent.replace(/{{genres}}/g, this.formatGenres(book.genres).join(", "));
 		bookContent = bookContent.replace(/{{status}}/g, (book.status || []).join(", "));
 		bookContent = bookContent.replace(/{{personalContent}}/g, personalContent.trim());
 
 		return bookContent;
 	}
 
-	private createGroupedNoteContent(frontmatter: string, bookMetadata: BookMetadata[]): string {
+	private createGroupedNoteContent(type: "series"|"author",frontmatter: string, metadata: AuthorMetadata | SeriesMetadata): string {
+		const bookMetadata = metadata.bodyContent.books || [];
 		let frontmatterStr = this.getFrontmatterString(frontmatter);
-		let content = GROUPED_NOTE_TEMPLATE.replace("{{frontmatter}}", frontmatterStr);
+		let content = type === "series" ? SERIES_GROUPED_NOTE_TEMPLATE : AUTHOR_GROUPED_NOTE_TEMPLATE;
+		
+		content = content.replace("{{frontmatter}}", frontmatterStr);
+
+		if (type === "series") {
+			if (metadata[this.plugin.settings.fieldsSettings["seriesGenres"].propertyName]) {
+				const genres = this.formatGenres(metadata[this.plugin.settings.fieldsSettings["seriesGenres"].propertyName]);
+
+				const groupedGenresContent = SERIES_GROUPED_GENRES_TEMPLATE.replace(/{{seriesGenres}}/g, genres.join(", "));
+
+				content = content.replace("{{SERIES_GROUPED_GENRES_TEMPLATE}}", groupedGenresContent);
+			}
+		}
 
 		const booksContents: string[] = [];
 
 		for (const book of bookMetadata) {
-			const bookContent = this.groupedNoteBookContent(book);
+			const bookContent = this.groupedNoteBookContent(type, book);
 			booksContents.push(bookContent);
 		}
 		
@@ -600,7 +626,7 @@ export class NoteService {
 	private createGroupedFrontmatter(metadata: Record<string, any>): string {
 		// exclude bodyContent from frontmatter
 		const { bodyContent, ...frontmatterData } = metadata;
-
+		console.log("Creating grouped frontmatter:", frontmatterData);
 		const frontmatterEntries: string[] = [];
 
 		// first add hardcoverBookId as the first property
@@ -641,6 +667,8 @@ export class NoteService {
 
 			return propertyNames;
 		});
+
+		console.log("All field property names:", allFieldPropertyNames);
 
 		if (this.plugin.settings.dateCreatedPropertyName) {
 			allFieldPropertyNames.push(
@@ -694,6 +722,7 @@ export class NoteService {
 	}
 
 	async updateGroupedNote(
+		type: "series"|"author",
 		bookMetadata: BookMetadata[],
 		existingFile: TFile
 	): Promise<TFile | null> {
@@ -723,7 +752,6 @@ export class NoteService {
 				aliases.push(...(frontmatter.aliases || []));
 			});
 
-			// console.log("Updating grouped note:", existingFile.name);
 			let pluginContent = '';
 			const startIdx = existingContent.indexOf(GROUPED_CONTENT_START);
 			const endIdx = existingContent.indexOf(CONTENT_DELIMITER);
@@ -748,12 +776,10 @@ export class NoteService {
 				};
 			}
 
-			// console.log("Existing books in note:", existingFile.name, existingBooks);
-
 			for (const book of bookMetadata) {
 				const stringBookId = book.hardcoverBookId.toString();
 				let existingContent = existingBooks[stringBookId]?.content || "";
-				const newContent = this.groupedNoteBookContent(book, existingContent);
+				const newContent = this.groupedNoteBookContent(type, book, existingContent);
 				const sortNumber = book.groupInformationSeries?.seriesPosition || book.groupInformationAuthor?.releaseYear || 0;
 				
 				existingBooks[stringBookId] = {
@@ -777,9 +803,8 @@ export class NoteService {
 				.join("\n\n");
 
 			const newContent = existingContent.substring(0, startIdx  + GROUPED_CONTENT_START.length) + newGroupedBookContent + existingContent.substring(endIdx);
-			// console.log("New content for grouped note:", newContent);
-			await this.vault.modify(existingFile, newContent);
 
+			await this.vault.modify(existingFile, newContent);
 
 			const booksPerStatus: Record<string, string[]> = {
 			};

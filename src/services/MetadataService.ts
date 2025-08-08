@@ -251,6 +251,8 @@ export class MetadataService {
 		books: BookMetadata[]
 	): AuthorMetadata | SeriesMetadata{
 		let metadata: AuthorMetadata | SeriesMetadata;
+		// create arrays for each status if enabled in settings
+		const { fieldsSettings } = this.settings;
 
 		if (type === "author") {
 			metadata = {
@@ -273,12 +275,14 @@ export class MetadataService {
 		if (this.settings.groupAddAliases) {
 			metadata.aliases = [];
 		}
+		if (fieldsSettings.seriesGenres.enabled && type === "series") {
+			metadata[fieldsSettings.seriesGenres.propertyName] = [];
+		}
 		metadata.bodyContent.name = name;
 		metadata.bodyContent.books = [];
 
 
-		// create arrays for each status if enabled in settings
-		const { fieldsSettings } = this.settings;
+		
 		if (fieldsSettings.bookCount.enabled) {
 			metadata[fieldsSettings.bookCount.propertyName] = 0;
 		}
@@ -325,8 +329,15 @@ export class MetadataService {
 				// add book title as alias
 				metadata.aliases?.push(book.bodyContent.title);
 			}
+
+			metadata[fieldsSettings.seriesGenres.propertyName]?.push(...(book[fieldsSettings.genres.propertyName] || []));
 		}
-			
+		
+		if (metadata.seriesGenres) {
+			// remove duplicates and sort
+			metadata[fieldsSettings.seriesGenres.propertyName] = Array.from(new Set(metadata[fieldsSettings.seriesGenres.propertyName])).sort();
+		}
+
 		return metadata;
 	}
 

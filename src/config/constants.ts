@@ -8,18 +8,21 @@ export const HARDCOVER_API = {
 export const HARDCOVER_URL = "https://hardcover.app";
 export const HARDCOVER_BOOKS_ROUTE = "books";
 
-export const GROUPED_CONTENT_START = "<!-- obsidian-hardcover-plugin-start -->";
-export const CONTENT_DELIMITER = "<!-- obsidian-hardcover-plugin-end -->";
-export const GROUPED_NOTE_TEMPLATE = `{{frontmatter}}
-<!-- obsidian-hardcover-plugin-start -->
+export const GROUPED_CONTENT_START = "%%ohp-start%%";
+export const CONTENT_DELIMITER = "%%ohp-end%%";
+export const AUTHOR_GROUPED_NOTE_TEMPLATE = `{{frontmatter}}%%ohp-start%%
 {{booksContents}}
-<!-- obsidian-hardcover-plugin-end -->
+%%ohp-end%%
+`
+export const SERIES_GROUPED_NOTE_TEMPLATE = `{{frontmatter}}%%ohp-start%%
+{{SERIES_GROUPED_GENRES_TEMPLATE}}
+{{booksContents}}
+%%ohp-end%%
 `
 
 // sortNumber is Year for author, Position for series
 // this is necessary so we can update the notes and insert new books in the right order
-export const GROUPED_NOTE_BOOK_TEMPLATE = `
-<!-- obsidian-hardcover-book-{{bookId}}-start {{sortNumber}} -->
+export const AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE = `%%ohp-book-{{bookId}}-start {{sortNumber}}%%
 ## {{title}}
 
 Status: {{status}}
@@ -33,13 +36,32 @@ Genres: {{genres}}
 {{hardcoverUrl}}
 
 {{myReview}}
-<!-- obsidian-hardcover-book-personal -->
+%%ohp-book-personal%%
 {{personalContent}}
-<!-- obsidian-hardcover-book-{bookId}-end -->
+%%ohp-book-{bookId}-end%%
+`
+
+export const SERIES_GROUPED_NOTE_BOOK_TEMPLATE = `%%ohp-book-{{bookId}}-start {{sortNumber}}%%
+## {{title}}
+
+Status: {{status}}
+
+> [!figure-right-s] ![cover]({{cover}})
+
+{{description}}
+
+{{hardcoverUrl}}
+
+{{myReview}}
+%%ohp-book-personal%%
+{{personalContent}}
+%%ohp-book-{bookId}-end%%
 `
 
 export const REVIEW_TEMPLATE = `
-## My Review
+### My Review
 
 {{review}}
 `;
+
+export const SERIES_GROUPED_GENRES_TEMPLATE = `%%ohp-groupedgenres-start%%Genres: {{seriesGenres}} %%ohp-groupedgenres-end%%`;

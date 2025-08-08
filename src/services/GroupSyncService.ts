@@ -239,7 +239,7 @@ export class GroupSyncService {
 
 					if (existingNote) {
 						// update existing note
-						await noteService.updateGroupedNote(seriesObj.books, existingNote);
+						await noteService.updateGroupedNote('series', seriesObj.books, existingNote);
 						updatedNotesCount++;
 					} else {
 						// create new note
@@ -274,7 +274,7 @@ export class GroupSyncService {
 
 					if (existingNote) {
 						// update existing note
-						await noteService.updateGroupedNote(authorObj.books, existingNote);
+						await noteService.updateGroupedNote('author', authorObj.books, existingNote);
 						updatedNotesCount++;
 					} else {
 						// create new note

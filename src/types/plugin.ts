@@ -30,6 +30,7 @@ export interface PluginSettings {
 	groupAddAliases: boolean; // whether to add aliases to grouped notes based on author/series names
 	dateCreatedPropertyName?: string; // optional property name for date created in frontmatter
 	dateModifiedPropertyName?: string; // optional property name for date modified in frontmatter
+	genresAsTags?: string; // format for genres as tags (Only in note body) - empty means no formatting.
 }
 
 type DataSource = "book" | "edition";
@@ -78,6 +79,7 @@ export interface FieldsSettings {
 	booksReading: FieldConfig;
 	booksRead: FieldConfig;
 	booksDNF: FieldConfig;
+	seriesGenres: FieldConfig;
 	
 }
 
@@ -134,5 +136,4 @@ export interface AuthorMetadata extends GroupedCommonMetadata {
 export interface SeriesMetadata extends GroupedCommonMetadata {
 	hardcoverSeriesId: number;
 	seriesName: string;
-	
 }

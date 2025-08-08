@@ -41,6 +41,7 @@ export const DEFAULT_FIELDS_SETTINGS: FieldsSettings = {
 	booksReading: { enabled: true, propertyName: "booksReading" },
 	booksRead: { enabled: true, propertyName: "booksRead" },
 	booksDNF: { enabled: true, propertyName: "booksDNF" },
+	seriesGenres: { enabled: true, propertyName: "seriesGenres" },
 };
 
 export const DEFAULT_FILENAME_FORMAT = "${title} (${year})";
@@ -71,4 +72,5 @@ export const DEFAULT_SETTINGS: PluginSettings = {
 	groupAddAliases: true, // whether to add aliases to grouped notes based on author/series names
 	dateCreatedPropertyName: "dateCreated", // optional property name for date created in frontmatter
 	dateModifiedPropertyName: "dateModified", // optional property name for date modified in frontmatter
+	genresAsTags: "", // format for genres as tags - empty means no formatting.
 };

@@ -100,5 +100,10 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
 		name: "Books DNF",
 		description: "books DNF for Author/Series",
 	}, 
+	{
+		key: "seriesGenres",
+		name: "Series Genres",
+		description: "Grouped genres for all books in the series",
+	}, 
 	// END GROUPED_NOTE_FIELDS
 ];
