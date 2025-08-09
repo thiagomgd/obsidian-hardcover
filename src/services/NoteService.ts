@@ -277,7 +277,7 @@ export class NoteService {
 	private formatReviewText(reviewText: string): string {
 		if (!reviewText) return "";
 
-		console.log("Original review text:", reviewText);
+		// console.log("Original review text:", reviewText);
 		// check if the review already contains HTML
 		if (reviewText.includes("<p>") || reviewText.includes("<br>")) {
 			// convert HTML to markdown-friendly format
@@ -600,7 +600,7 @@ export class NoteService {
 		let frontmatterStr = this.getFrontmatterString(frontmatter);
 		let content = type === "series" ? SERIES_GROUPED_NOTE_TEMPLATE : AUTHOR_GROUPED_NOTE_TEMPLATE;
 		
-		content = content.replace("{{frontmatter}}", frontmatterStr);
+		content = frontmatterStr + content;
 
 		if (type === "series") {
 			if (metadata[this.plugin.settings.fieldsSettings["seriesGenres"].propertyName]) {
@@ -626,7 +626,7 @@ export class NoteService {
 	private createGroupedFrontmatter(metadata: Record<string, any>): string {
 		// exclude bodyContent from frontmatter
 		const { bodyContent, ...frontmatterData } = metadata;
-		console.log("Creating grouped frontmatter:", frontmatterData);
+
 		const frontmatterEntries: string[] = [];
 
 		// first add hardcoverBookId as the first property
@@ -667,8 +667,6 @@ export class NoteService {
 
 			return propertyNames;
 		});
-
-		console.log("All field property names:", allFieldPropertyNames);
 
 		if (this.plugin.settings.dateCreatedPropertyName) {
 			allFieldPropertyNames.push(
@@ -737,7 +735,7 @@ export class NoteService {
 			const seriesGenres: string[] = [];
 			const booksToStatus: Record<string, number> = {};
 
-			this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
+			await this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
 				for (const id of frontmatter[fieldsSettings.booksToRead.propertyName] || []) {
 					booksToStatus[id] = 1;
 				}
@@ -770,20 +768,22 @@ export class NoteService {
 			}
 
 			const existingBooks: Record<string, { sortNumber: number; content: string }> = {};
-			const bookRegex = /%%ohp-book-(\d+)-start (\d+)%%([\s\S]*?)%%ohp-book-\1-end%%/g;
+			const bookRegex = /%%ohp-book-start-(\d+)-(\d+)%%([\s\S]*?)%%ohp-book-end-\1-\2%%/g;
 			let match;
 			while ((match = bookRegex.exec(pluginContent)) !== null) {
 				const bookId = match[1];
+				const sortNumber = Number(match[2]);
+				const content = match[3].trim();
 				existingBooks[bookId] = {
-					sortNumber: Number(match[2]),
-					content: match[3].trim(),
+					sortNumber,
+					content,
 				};
 			}
 
 			for (const book of bookMetadata) {
 				const stringBookId = book.hardcoverBookId.toString();
-				let existingContent = existingBooks[stringBookId]?.content || "";
-				const newContent = this.groupedNoteBookContent(type, book, existingContent);
+				let bookExistingContent = existingBooks[stringBookId]?.content || "";
+				const newContent = this.groupedNoteBookContent(type, book, bookExistingContent);
 				const sortNumber = book.groupInformationSeries?.seriesPosition || book.groupInformationAuthor?.releaseYear || 0;
 				
 				existingBooks[stringBookId] = {
@@ -809,18 +809,22 @@ export class NoteService {
 				})
 				.join("\n\n");
 
-			let newContent = existingContent.substring(0, startIdx  + GROUPED_CONTENT_START.length) + newGroupedBookContent + existingContent.substring(endIdx);
-			if (type === "series" && fieldsSettings.seriesGenres.enabled) {
-				const formattedGenres = this.formatGenres([...new Set(seriesGenres)]);
-				const newGenresStr = SERIES_GROUPED_GENRES_TEMPLATE.replace(/{{seriesGenres}}/g, formattedGenres.join(", "));
-				const genresStartIdx = newContent.indexOf(GROUPED_GENRES_START);
-				const genresEndIdx = newContent.indexOf(GROUPED_GENRES_END, genresStartIdx);
-				if (genresStartIdx !== -1 && genresEndIdx !== -1 && genresEndIdx > genresStartIdx) {
-					const before = newContent.substring(0, genresStartIdx);
-					const after = newContent.substring(genresEndIdx);
-					newContent = before + newGenresStr + after;
+			// let newContent = existingContent.substring(0, startIdx  + GROUPED_CONTENT_START.length) + newGroupedBookContent + existingContent.substring(endIdx);
+			let newPluginContent = type === "series" ? SERIES_GROUPED_NOTE_TEMPLATE : AUTHOR_GROUPED_NOTE_TEMPLATE;
+
+
+			if (type === "series") {
+				if (type === "series" && fieldsSettings.seriesGenres.enabled) {
+					const formattedGenres = this.formatGenres([...new Set(seriesGenres)]);
+					const groupedGenresContent = SERIES_GROUPED_GENRES_TEMPLATE.replace(/{{seriesGenres}}/g, formattedGenres.join(", "));
+
+					newPluginContent = newPluginContent.replace("{{SERIES_GROUPED_GENRES_TEMPLATE}}", groupedGenresContent);
 				}
 			}
+
+			newPluginContent = newPluginContent.replace(/{{booksContents}}/g, newGroupedBookContent);
+
+			const newContent = existingContent.substring(0, startIdx) + newPluginContent + existingContent.substring(endIdx);
 
 			await this.vault.modify(existingFile, newContent);
 
@@ -858,7 +862,7 @@ export class NoteService {
 				}	
 			}
 
-			this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
+			await this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
 				for (const [statusString, ids] of Object.entries(booksPerStatus)) {
 					frontmatter[statusString] = ids;
 				}
