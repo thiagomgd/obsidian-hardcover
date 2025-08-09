@@ -233,7 +233,8 @@ export class GroupSyncService {
 					const metadata = metadataService.buildGroupedMetadata('series', seriesId, seriesObj.name, seriesObj.books);
 
 					// check if note already exists by checking author name
-					const existingNote = await noteService.findNoteByHardcoverSeriesId(
+					const existingNote = await noteService.findNoteByHCId(
+						"series",
 						seriesId
 					);
 
@@ -268,7 +269,8 @@ export class GroupSyncService {
 					const metadata = metadataService.buildGroupedMetadata('author', authorId, authorObj.name, authorObj.books);
 
 					// check if note already exists by checking author name
-					const existingNote = await noteService.findNoteByHardcoverAuthorId(
+					const existingNote = await noteService.findNoteByHCId(
+						"author",
 						authorId
 					);
 

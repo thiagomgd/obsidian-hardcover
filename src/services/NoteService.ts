@@ -1,4 +1,4 @@
-import { FileManager, TFile, Vault } from "obsidian";
+import { FileManager, MetadataCache, TFile, Vault } from "obsidian";
 import { AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE, AUTHOR_GROUPED_NOTE_TEMPLATE, CONTENT_DELIMITER, GROUPED_CONTENT_START, GROUPED_GENRES_END, GROUPED_GENRES_START, PERSONAL_CONTENT_START, REVIEW_TEMPLATE, SERIES_GROUPED_GENRES_TEMPLATE, SERIES_GROUPED_NOTE_BOOK_TEMPLATE, SERIES_GROUPED_NOTE_TEMPLATE } from "src/config/constants";
 import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
 import { HARDCOVER_STATUS_MAP_REVERSE } from "src/config/statusMapping";
@@ -12,6 +12,7 @@ export class NoteService {
 	constructor(
 		private vault: Vault,
 		private fileManager: FileManager,
+		private metadataCache: MetadataCache,
 		private fileUtils: FileUtils,
 		private plugin: ObsidianHardcover
 	) {
@@ -420,95 +421,51 @@ export class NoteService {
 		}
 	}
 
-	async findNoteByHardcoverAuthorId(hardcoverAuthorId: number): Promise<TFile | null> {
-		try {
-			const folderPath = this.plugin.settings.groupAuthorTargetFolder;
-
-			const folderExists = await this.vault.adapter.exists(folderPath);
-			if (!folderExists) {
-				console.log(`Specified target folder doesn't exist: ${folderPath}`);
-				return null;
-			}
-
-			// get all markdown files in the folder
-			const folder = this.vault.getFolderByPath(folderPath);
-			if (!folder) {
-				console.log(`Couldn't get folder object for: ${folderPath}`);
-				return null;
-			}
-
-			// search through files in the folder
-			for (const file of folder.children) {
-				// only check markdown files
-				if (file instanceof TFile && file.extension === "md") {
-					const content = await this.vault.read(file);
-
-					// check if it has frontmatter
-					const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-					if (frontmatterMatch) {
-						const frontmatter = frontmatterMatch[1];
-
-						// check if hardcoverBookId matches
-						const idMatch = frontmatter.match(/hardcoverAuthorId:\s*(\d+)/);
-						if (idMatch && parseInt(idMatch[1]) === hardcoverAuthorId) {
-							return file;
-						}
-					}
-				}
-			}
-
-			return null;
-		} catch (error) {
-			console.error(
-				`Error finding note by Hardcover Author ID ${hardcoverAuthorId}:`,
-				error
-			);
-			return null;
-		}
-	}
-
-	async findNoteByHardcoverSeriesId(hardcoverSeriesId: number): Promise<TFile | null> {
+	async findNoteByHCId(type: string, id: number): Promise<TFile | null> {
 		// TODO: allow multiple folders, so user can separate books, light novels, manga, comics, etc...
+		const idProperty = type === "series" ? "hardcoverSeriesId" : "hardcoverAuthorId";
 		try {
-			const folderPath = this.plugin.settings.groupSeriesTargetFolder;
 
-			const folderExists = await this.vault.adapter.exists(folderPath);
-			if (!folderExists) {
-				console.log(`Specified target folder doesn't exist: ${folderPath}`);
-				return null;
-			}
+			const folderPaths = type === "series" 
+				? (this.plugin.settings.groupSeriesAllFolders?.split(";") || [this.plugin.settings.groupSeriesTargetFolder]) 
+				: [this.plugin.settings.groupAuthorTargetFolder]);
 
-			// get all markdown files in the folder
-			const folder = this.vault.getFolderByPath(folderPath);
-			if (!folder) {
-				console.log(`Couldn't get folder object for: ${folderPath}`);
-				return null;
-			}
+			for (const folderPath of folderPaths) {
+				const folderExists = await this.vault.adapter.exists(folderPath);
+				if (!folderExists) {
+					console.warn(`Specified target folder doesn't exist: ${folderPath}`);
+					continue;
+				}
 
-			// search through files in the folder
-			for (const file of folder.children) {
-				// only check markdown files
-				if (file instanceof TFile && file.extension === "md") {
-					const content = await this.vault.read(file);
+				// get all markdown files in the folder
+				const folder = this.vault.getFolderByPath(folderPath);
+				if (!folder) {
+					console.warn(`Couldn't get folder object for: ${folderPath}`);
+					continue;
+				}
 
-					// check if it has frontmatter
-					const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-					if (frontmatterMatch) {
-						const frontmatter = frontmatterMatch[1];
+				// search through files in the folder
+				for (const file of folder.children) {
+					// only check markdown files
+					if (file instanceof TFile && file.extension === "md") {
+						// TODO - change to getFileCache 
+						const metadata = this.metadataCache.getFileCache(file); 
+						const frontmatter = metadata?.frontmatter
 
-						// check if hardcoverBookId matches
-						const idMatch = frontmatter.match(/hardcoverSeriesId:\s*(\d+)/);
-						if (idMatch && parseInt(idMatch[1]) === hardcoverSeriesId) {
+						if (!frontmatter) {
+						 continue; // skip files without frontmatter
+						} 
+
+						if (frontmatter[idProperty] === id) {
 							return file;
 						}
 					}
 				}
 			}
-
 			return null;
 		} catch (error) {
 			console.error(
-				`Error finding note by Hardcover Series ID ${hardcoverSeriesId}:`,
+				`Error finding note by ${idProperty} ${id}:`,
 				error
 			);
 			return null;
