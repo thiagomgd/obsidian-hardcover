@@ -1,5 +1,5 @@
 import { FileManager, TFile, Vault } from "obsidian";
-import { AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE, AUTHOR_GROUPED_NOTE_TEMPLATE, CONTENT_DELIMITER, GROUPED_CONTENT_START, GROUPED_GENRES_END, GROUPED_GENRES_START, REVIEW_TEMPLATE, SERIES_GROUPED_GENRES_TEMPLATE, SERIES_GROUPED_NOTE_BOOK_TEMPLATE, SERIES_GROUPED_NOTE_TEMPLATE } from "src/config/constants";
+import { AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE, AUTHOR_GROUPED_NOTE_TEMPLATE, CONTENT_DELIMITER, GROUPED_CONTENT_START, GROUPED_GENRES_END, GROUPED_GENRES_START, PERSONAL_CONTENT_START, REVIEW_TEMPLATE, SERIES_GROUPED_GENRES_TEMPLATE, SERIES_GROUPED_NOTE_BOOK_TEMPLATE, SERIES_GROUPED_NOTE_TEMPLATE } from "src/config/constants";
 import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
 import { HARDCOVER_STATUS_MAP_REVERSE } from "src/config/statusMapping";
 
@@ -529,7 +529,7 @@ export class NoteService {
 	}
 
 	private groupedNoteBookContent(type: "series" | "author", book: BookMetadata, existingContent = ""): string {
-		const personalContent = existingContent?.split("<!-- obsidian-hardcover-book-personal -->")?.[1] || "";
+		const personalContent = existingContent?.split(PERSONAL_CONTENT_START)?.[1] || "";
 
 		let bookContent = type === "series" ? SERIES_GROUPED_NOTE_BOOK_TEMPLATE : AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE;
 
@@ -770,7 +770,7 @@ export class NoteService {
 			}
 
 			const existingBooks: Record<string, { sortNumber: number; content: string }> = {};
-			const bookRegex = /<!-- obsidian-hardcover-book-(\d+)-start (\d+) -->([\s\S]*?)<!-- obsidian-hardcover-book-\1-end -->/g;
+			const bookRegex = /%%ohp-book-(\d+)-start (\d+)%%([\s\S]*?)%%ohp-book-\1-end%%/g;
 			let match;
 			while ((match = bookRegex.exec(pluginContent)) !== null) {
 				const bookId = match[1];

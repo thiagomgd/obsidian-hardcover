@@ -20,6 +20,7 @@ export const SERIES_GROUPED_NOTE_TEMPLATE = `{{frontmatter}}%%ohp-start%%
 %%ohp-end%%
 `
 
+export const PERSONAL_CONTENT_START = "%%ohp-book-personal%%";
 // sortNumber is Year for author, Position for series
 // this is necessary so we can update the notes and insert new books in the right order
 export const AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE = `%%ohp-book-{{bookId}}-start {{sortNumber}}%%
@@ -36,7 +37,7 @@ Genres: {{genres}}
 {{hardcoverUrl}}
 
 {{myReview}}
-%%ohp-book-personal%%
+${PERSONAL_CONTENT_START}
 {{personalContent}}
 %%ohp-book-{bookId}-end%%
 `
