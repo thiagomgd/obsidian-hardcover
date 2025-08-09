@@ -1,5 +1,5 @@
 import { FileManager, TFile, Vault } from "obsidian";
-import { AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE, AUTHOR_GROUPED_NOTE_TEMPLATE, CONTENT_DELIMITER, GROUPED_CONTENT_START, REVIEW_TEMPLATE, SERIES_GROUPED_GENRES_TEMPLATE, SERIES_GROUPED_NOTE_BOOK_TEMPLATE, SERIES_GROUPED_NOTE_TEMPLATE } from "src/config/constants";
+import { AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE, AUTHOR_GROUPED_NOTE_TEMPLATE, CONTENT_DELIMITER, GROUPED_CONTENT_START, GROUPED_GENRES_END, GROUPED_GENRES_START, REVIEW_TEMPLATE, SERIES_GROUPED_GENRES_TEMPLATE, SERIES_GROUPED_NOTE_BOOK_TEMPLATE, SERIES_GROUPED_NOTE_TEMPLATE } from "src/config/constants";
 import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
 import { HARDCOVER_STATUS_MAP_REVERSE } from "src/config/statusMapping";
 
@@ -734,6 +734,7 @@ export class NoteService {
 			const existingContent = await this.vault.read(existingFile);
 			
 			const aliases: string[] = [];
+			const seriesGenres: string[] = [];
 			const booksToStatus: Record<string, number> = {};
 
 			this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
@@ -750,6 +751,9 @@ export class NoteService {
 					booksToStatus[id] = 5;
 				}
 				aliases.push(...(frontmatter.aliases || []));
+				if (type === "series" && fieldsSettings.seriesGenres.enabled) {
+					seriesGenres.push(...(frontmatter[fieldsSettings.seriesGenres.propertyName] || []));
+				}
 			});
 
 			let pluginContent = '';
@@ -793,6 +797,9 @@ export class NoteService {
 				}
 
 				aliases.push(book.title); // escape quotes for frontmatter
+				if (type === "series" && fieldsSettings.seriesGenres.enabled) {
+					seriesGenres.push(...(book.genres || []));
+				}
 			}
 
 			const newGroupedBookContent = Object.entries(existingBooks)
@@ -802,7 +809,18 @@ export class NoteService {
 				})
 				.join("\n\n");
 
-			const newContent = existingContent.substring(0, startIdx  + GROUPED_CONTENT_START.length) + newGroupedBookContent + existingContent.substring(endIdx);
+			let newContent = existingContent.substring(0, startIdx  + GROUPED_CONTENT_START.length) + newGroupedBookContent + existingContent.substring(endIdx);
+			if (type === "series" && fieldsSettings.seriesGenres.enabled) {
+				const formattedGenres = this.formatGenres([...new Set(seriesGenres)]);
+				const newGenresStr = SERIES_GROUPED_GENRES_TEMPLATE.replace(/{{seriesGenres}}/g, formattedGenres.join(", "));
+				const genresStartIdx = newContent.indexOf(GROUPED_GENRES_START);
+				const genresEndIdx = newContent.indexOf(GROUPED_GENRES_END, genresStartIdx);
+				if (genresStartIdx !== -1 && genresEndIdx !== -1 && genresEndIdx > genresStartIdx) {
+					const before = newContent.substring(0, genresStartIdx);
+					const after = newContent.substring(genresEndIdx);
+					newContent = before + newGenresStr + after;
+				}
+			}
 
 			await this.vault.modify(existingFile, newContent);
 
@@ -852,6 +870,9 @@ export class NoteService {
 				}
 				if (dateModifiedPropertyName) {
 					frontmatter[dateModifiedPropertyName] = new Date().toISOString();
+				}
+				if (type === "series" && fieldsSettings.seriesGenres.enabled) {
+					frontmatter[fieldsSettings.seriesGenres.propertyName] = [...new Set(seriesGenres)];
 				}
 			});
 

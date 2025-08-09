@@ -333,7 +333,7 @@ export class MetadataService {
 			metadata[fieldsSettings.seriesGenres.propertyName]?.push(...(book[fieldsSettings.genres.propertyName] || []));
 		}
 		
-		if (metadata.seriesGenres) {
+		if (metadata[fieldsSettings.seriesGenres.propertyName]) {
 			// remove duplicates and sort
 			metadata[fieldsSettings.seriesGenres.propertyName] = Array.from(new Set(metadata[fieldsSettings.seriesGenres.propertyName])).sort();
 		}

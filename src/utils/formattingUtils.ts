@@ -11,7 +11,8 @@ export function toMarkdownBlockquote(text: string): string {
 
 export function toKebabCase(str: string): string {
   // Convert to lowercase, replace spaces and underscores with hyphens, and insert hyphens before uppercase letters
-  return str
+  return str.trim()
+    .replace(/[()&|]/g, '')
     .replace(/([a-z])([A-Z])/g, "$1-$2")
     .replace(/[\s_]+/g, '-')
     .toLowerCase();

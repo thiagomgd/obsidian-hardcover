@@ -64,4 +64,6 @@ export const REVIEW_TEMPLATE = `
 {{review}}
 `;
 
-export const SERIES_GROUPED_GENRES_TEMPLATE = `%%ohp-groupedgenres-start%%Genres: {{seriesGenres}} %%ohp-groupedgenres-end%%`;
+export const GROUPED_GENRES_START = "%%ohp-groupedgenres-start%%";
+export const GROUPED_GENRES_END = "%%ohp-groupedgenres-end%%";
+export const SERIES_GROUPED_GENRES_TEMPLATE = `${GROUPED_GENRES_START}Genres: {{seriesGenres}} ${GROUPED_GENRES_END}`;
