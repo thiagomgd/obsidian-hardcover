@@ -32,9 +32,10 @@ export interface PluginSettings {
 	dateModifiedPropertyName?: string; // optional property name for date modified in frontmatter
 	genresAsTags?: string; // format for genres as tags (Only in note body) - empty means no formatting.
 	groupSeriesAllFolders?: string; // semicolon separated list of folders to search for series notes, used in findNoteByHCId
+	groupAuthorAllFolders?: string;
 }
 
-type DataSource = "book" | "edition";
+type DataSource = 'book' | 'edition';
 export interface FieldConfig {
 	enabled: boolean;
 	propertyName: string;
@@ -81,7 +82,6 @@ export interface FieldsSettings {
 	booksRead: FieldConfig;
 	booksDNF: FieldConfig;
 	seriesGenres: FieldConfig;
-	
 }
 
 export interface FieldDefinition {

@@ -1,12 +1,25 @@
-import { FileManager, MetadataCache, TFile, Vault } from "obsidian";
-import { AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE, AUTHOR_GROUPED_NOTE_TEMPLATE, CONTENT_DELIMITER, GROUPED_CONTENT_START, GROUPED_GENRES_END, GROUPED_GENRES_START, PERSONAL_CONTENT_START, REVIEW_TEMPLATE, SERIES_GROUPED_GENRES_TEMPLATE, SERIES_GROUPED_NOTE_BOOK_TEMPLATE, SERIES_GROUPED_NOTE_TEMPLATE } from "src/config/constants";
-import { FIELD_DEFINITIONS } from "src/config/fieldDefinitions";
-import { HARDCOVER_STATUS_MAP_REVERSE } from "src/config/statusMapping";
+import { FileManager, MetadataCache, TFile, Vault } from 'obsidian';
+import {
+	AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE,
+	AUTHOR_GROUPED_NOTE_TEMPLATE,
+	CONTENT_DELIMITER,
+	GROUPED_CONTENT_START,
+	GROUPED_GENRES_END,
+	GROUPED_GENRES_START,
+	PERSONAL_CONTENT_START,
+	RATING_TEMPLATE,
+	REVIEW_TEMPLATE,
+	SERIES_GROUPED_GENRES_TEMPLATE,
+	SERIES_GROUPED_NOTE_BOOK_TEMPLATE,
+	SERIES_GROUPED_NOTE_TEMPLATE,
+} from 'src/config/constants';
+import { FIELD_DEFINITIONS } from 'src/config/fieldDefinitions';
+import { HARDCOVER_STATUS_MAP_REVERSE } from 'src/config/statusMapping';
 
-import ObsidianHardcover from "src/main";
-import { ActivityDateFieldConfig, AuthorMetadata, BookMetadata, SeriesMetadata } from "src/types";
-import { FileUtils } from "src/utils/FileUtils";
-import { toKebabCase, toMarkdownBlockquote } from "src/utils/formattingUtils";
+import ObsidianHardcover from 'src/main';
+import { ActivityDateFieldConfig, AuthorMetadata, BookMetadata, SeriesMetadata } from 'src/types';
+import { FileUtils } from 'src/utils/FileUtils';
+import { toKebabCase, toMarkdownBlockquote } from 'src/utils/formattingUtils';
 
 export class NoteService {
 	constructor(
@@ -26,9 +39,7 @@ export class NoteService {
 				bookMetadata
 			);
 
-			const targetFolder = this.fileUtils.normalizePath(
-				this.plugin.settings.targetFolder
-			);
+			const targetFolder = this.fileUtils.normalizePath(this.plugin.settings.targetFolder);
 			await this.ensureFolderExists(targetFolder);
 			const fullPath = targetFolder ? `${targetFolder}/${filename}` : filename;
 
@@ -50,15 +61,12 @@ export class NoteService {
 
 			return file;
 		} catch (error) {
-			console.error("Error creating note:", error);
+			console.error('Error creating note:', error);
 			return null;
 		}
 	}
 
-	async updateNote(
-		bookMetadata: BookMetadata,
-		existingFile: TFile
-	): Promise<TFile | null> {
+	async updateNote(bookMetadata: BookMetadata, existingFile: TFile): Promise<TFile | null> {
 		try {
 			const originalPath = existingFile.path;
 			const existingContent = await this.vault.read(existingFile);
@@ -71,9 +79,7 @@ export class NoteService {
 			let updatedContent: string;
 			if (delimiterIndex !== -1) {
 				// preserve original content after it
-				const userContent = existingContent.substring(
-					delimiterIndex + CONTENT_DELIMITER.length
-				);
+				const userContent = existingContent.substring(delimiterIndex + CONTENT_DELIMITER.length);
 
 				updatedContent = newContent.replace(
 					`${CONTENT_DELIMITER}\n\n`,
@@ -89,12 +95,8 @@ export class NoteService {
 				bookMetadata
 			);
 
-			const targetFolder = this.fileUtils.normalizePath(
-				this.plugin.settings.targetFolder
-			);
-			const newPath = targetFolder
-				? `${targetFolder}/${newFilename}`
-				: newFilename;
+			const targetFolder = this.fileUtils.normalizePath(this.plugin.settings.targetFolder);
+			const newPath = targetFolder ? `${targetFolder}/${newFilename}` : newFilename;
 
 			// check if the file needs to be renamed
 			if (originalPath !== newPath) {
@@ -112,7 +114,7 @@ export class NoteService {
 				return existingFile;
 			}
 		} catch (error) {
-			console.error("Error updating note:", error);
+			console.error('Error updating note:', error);
 			return null;
 		}
 	}
@@ -131,33 +133,24 @@ export class NoteService {
 			bookMetadata[this.plugin.settings.fieldsSettings.cover.propertyName];
 
 		if (hasCover) {
-			const coverProperty =
-				this.plugin.settings.fieldsSettings.cover.propertyName;
+			const coverProperty = this.plugin.settings.fieldsSettings.cover.propertyName;
 			content += `![${escapedTitle} Cover|300](${bookMetadata[coverProperty]})\n\n`;
 		}
 
 		// add description if available
 		const hasDescription =
 			this.plugin.settings.fieldsSettings.description.enabled &&
-			bookMetadata[
-				this.plugin.settings.fieldsSettings.description.propertyName
-			];
+			bookMetadata[this.plugin.settings.fieldsSettings.description.propertyName];
 
 		if (hasDescription) {
-			const descProperty =
-				this.plugin.settings.fieldsSettings.description.propertyName;
+			const descProperty = this.plugin.settings.fieldsSettings.description.propertyName;
 			// add extra spacing if there is a cover above
-			const spacing = hasCover ? "\n" : "";
+			const spacing = hasCover ? '\n' : '';
 			content += `${spacing}${bookMetadata[descProperty]}\n\n`;
 		}
 
-		if (
-			this.plugin.settings.fieldsSettings.review.enabled &&
-			bookMetadata.bodyContent.review
-		) {
-			const formattedReview = this.formatReviewText(
-				bookMetadata.bodyContent.review
-			);
+		if (this.plugin.settings.fieldsSettings.review.enabled && bookMetadata.bodyContent.review) {
+			const formattedReview = this.formatReviewText(bookMetadata.bodyContent.review);
 			content += `## My Review\n\n${formattedReview}\n\n`;
 		}
 
@@ -168,10 +161,9 @@ export class NoteService {
 	}
 
 	private getBookTitle(bookMetadata: any) {
-		const titleProperty =
-			this.plugin.settings.fieldsSettings.title.propertyName;
+		const titleProperty = this.plugin.settings.fieldsSettings.title.propertyName;
 
-		return bookMetadata[titleProperty] || "Untitled";
+		return bookMetadata[titleProperty] || 'Untitled';
 	}
 
 	private async ensureFolderExists(folderPath: string): Promise<void> {
@@ -196,23 +188,17 @@ export class NoteService {
 
 		// first add hardcoverBookId as the first property
 		if (frontmatterData.hardcoverBookId !== undefined) {
-			frontmatterEntries.push(
-				`hardcoverBookId: ${frontmatterData.hardcoverBookId}`
-			);
+			frontmatterEntries.push(`hardcoverBookId: ${frontmatterData.hardcoverBookId}`);
 		}
 
 		// for grouped notes add hardcoverAuthorId as the first property
 		if (frontmatterData.hardcoverAuthorId !== undefined) {
-			frontmatterEntries.push(
-				`hardcoverAuthorId: ${frontmatterData.hardcoverAuthorId}`
-			);
+			frontmatterEntries.push(`hardcoverAuthorId: ${frontmatterData.hardcoverAuthorId}`);
 		}
 
 		// for grouped notes add hardcoverSeriesId as the first property
 		if (frontmatterData.hardcoverSeriesId !== undefined) {
-			frontmatterEntries.push(
-				`hardcoverSeriesId: ${frontmatterData.hardcoverSeriesId}`
-			);
+			frontmatterEntries.push(`hardcoverSeriesId: ${frontmatterData.hardcoverSeriesId}`);
 		}
 
 		// add all other properties in the order defined in FIELD_DEFINITIONS
@@ -224,10 +210,7 @@ export class NoteService {
 			// add start/end property names for activity date fields
 			if (field.isActivityDateField) {
 				const activityField = fieldSettings as ActivityDateFieldConfig;
-				propertyNames.push(
-					activityField.startPropertyName,
-					activityField.endPropertyName
-				);
+				propertyNames.push(activityField.startPropertyName, activityField.endPropertyName);
 			}
 
 			return propertyNames;
@@ -238,7 +221,7 @@ export class NoteService {
 			if (!frontmatterData.hasOwnProperty(propName)) continue;
 
 			// skip hardcoverBookId as we already added it
-			if (propName === "hardcoverBookId") continue;
+			if (propName === 'hardcoverBookId') continue;
 
 			const value = frontmatterData[propName];
 
@@ -247,49 +230,40 @@ export class NoteService {
 
 			if (Array.isArray(value)) {
 				frontmatterEntries.push(`${propName}: ${JSON.stringify(value)}`);
-			} else if (typeof value === "string") {
-				if (
-					propName ===
-					this.plugin.settings.fieldsSettings.description.propertyName
-				) {
+			} else if (typeof value === 'string') {
+				if (propName === this.plugin.settings.fieldsSettings.description.propertyName) {
 					// remove all \n sequences and replace with spaces to avoid frontmatter issues
-					const cleanValue = value.replace(/\\n/g, " ").trim();
+					const cleanValue = value.replace(/\\n/g, ' ').trim();
 					// remove any multiple spaces that might result
-					const finalValue = cleanValue.replace(/\s+/g, " ");
-					frontmatterEntries.push(
-						`${propName}: "${finalValue.replace(/"/g, '\\"')}"`
-					);
+					const finalValue = cleanValue.replace(/\s+/g, ' ');
+					frontmatterEntries.push(`${propName}: "${finalValue.replace(/"/g, '\\"')}"`);
 				} else {
 					// for other string fields, just escape quotes
-					frontmatterEntries.push(
-						`${propName}: "${value.replace(/"/g, '\\"')}"`
-					);
+					frontmatterEntries.push(`${propName}: "${value.replace(/"/g, '\\"')}"`);
 				}
 			} else {
 				frontmatterEntries.push(`${propName}: ${value}`);
 			}
 		}
 
-		return frontmatterEntries.join("\n");
+		return frontmatterEntries.join('\n');
 	}
 
-
-
 	private formatReviewText(reviewText: string): string {
-		if (!reviewText) return "";
+		if (!reviewText) return '';
 
 		// console.log("Original review text:", reviewText);
 		// check if the review already contains HTML
-		if (reviewText.includes("<p>") || reviewText.includes("<br>")) {
+		if (reviewText.includes('<p>') || reviewText.includes('<br>')) {
 			// convert HTML to markdown-friendly format
 			let formatted = reviewText
-				.replace(/<p>/g, "")
-				.replace(/<\/p>/g, "\n\n")
-				.replace(/<br\s*\/?>/g, "\n")
+				.replace(/<p>/g, '')
+				.replace(/<\/p>/g, '\n\n')
+				.replace(/<br\s*\/?>/g, '\n')
 				.replace(/&quot;/g, '"')
-				.replace(/&amp;/g, "&")
-				.replace(/&lt;/g, "<")
-				.replace(/&gt;/g, ">");
+				.replace(/&amp;/g, '&')
+				.replace(/&lt;/g, '<')
+				.replace(/&gt;/g, '>');
 
 			return formatted.trim();
 		} else {
@@ -318,7 +292,7 @@ export class NoteService {
 			// search through files in the folder
 			for (const file of folder.children) {
 				// only check markdown files
-				if (file instanceof TFile && file.extension === "md") {
+				if (file instanceof TFile && file.extension === 'md') {
 					const content = await this.vault.read(file);
 
 					// check if it has frontmatter
@@ -337,10 +311,7 @@ export class NoteService {
 
 			return null;
 		} catch (error) {
-			console.error(
-				`Error finding note by Hardcover Book ID ${hardcoverBookId}:`,
-				error
-			);
+			console.error(`Error finding note by Hardcover Book ID ${hardcoverBookId}:`, error);
 			return null;
 		}
 	}
@@ -362,7 +333,7 @@ export class NoteService {
 			// create frontmatter and full note content with delimiter
 			const frontmatter = this.createGroupedFrontmatter(authorMetadata);
 
-			const noteContent = this.createGroupedNoteContent("author", frontmatter, authorMetadata);
+			const noteContent = this.createGroupedNoteContent('author', frontmatter, authorMetadata);
 
 			let file;
 			if (await this.vault.adapter.exists(fullPath)) {
@@ -378,7 +349,7 @@ export class NoteService {
 
 			return file;
 		} catch (error) {
-			console.error("Error creating note:", error);
+			console.error('Error creating note:', error);
 			return null;
 		}
 	}
@@ -400,7 +371,7 @@ export class NoteService {
 			// create frontmatter and full note content with delimiter
 			const frontmatter = this.createGroupedFrontmatter(seriesMetadata);
 
-			const noteContent = this.createGroupedNoteContent("series", frontmatter, seriesMetadata);
+			const noteContent = this.createGroupedNoteContent('series', frontmatter, seriesMetadata);
 
 			let file;
 			if (await this.vault.adapter.exists(fullPath)) {
@@ -416,19 +387,23 @@ export class NoteService {
 
 			return file;
 		} catch (error) {
-			console.error("Error creating note:", error);
+			console.error('Error creating note:', error);
 			return null;
 		}
 	}
 
 	async findNoteByHCId(type: string, id: number): Promise<TFile | null> {
 		// TODO: allow multiple folders, so user can separate books, light novels, manga, comics, etc...
-		const idProperty = type === "series" ? "hardcoverSeriesId" : "hardcoverAuthorId";
+		const idProperty = type === 'series' ? 'hardcoverSeriesId' : 'hardcoverAuthorId';
 		try {
-
-			const folderPaths = type === "series" 
-				? (this.plugin.settings.groupSeriesAllFolders?.split(";") || [this.plugin.settings.groupSeriesTargetFolder]) 
-				: [this.plugin.settings.groupAuthorTargetFolder]);
+			const folderPaths =
+				type === 'series'
+					? this.plugin.settings.groupSeriesAllFolders?.split(';') || [
+							this.plugin.settings.groupSeriesTargetFolder,
+						]
+					: this.plugin.settings.groupAuthorAllFolders?.split(';') || [
+							this.plugin.settings.groupAuthorTargetFolder,
+						];
 
 			for (const folderPath of folderPaths) {
 				const folderExists = await this.vault.adapter.exists(folderPath);
@@ -447,14 +422,14 @@ export class NoteService {
 				// search through files in the folder
 				for (const file of folder.children) {
 					// only check markdown files
-					if (file instanceof TFile && file.extension === "md") {
-						// TODO - change to getFileCache 
-						const metadata = this.metadataCache.getFileCache(file); 
-						const frontmatter = metadata?.frontmatter
+					if (file instanceof TFile && file.extension === 'md') {
+						// TODO - change to getFileCache
+						const metadata = this.metadataCache.getFileCache(file);
+						const frontmatter = metadata?.frontmatter;
 
 						if (!frontmatter) {
-						 continue; // skip files without frontmatter
-						} 
+							continue; // skip files without frontmatter
+						}
 
 						if (frontmatter[idProperty] === id) {
 							return file;
@@ -464,10 +439,7 @@ export class NoteService {
 			}
 			return null;
 		} catch (error) {
-			console.error(
-				`Error finding note by ${idProperty} ${id}:`,
-				error
-			);
+			console.error(`Error finding note by ${idProperty} ${id}:`, error);
 			return null;
 		}
 	}
@@ -485,14 +457,22 @@ export class NoteService {
 		return genres;
 	}
 
-	private groupedNoteBookContent(type: "series" | "author", book: BookMetadata, existingContent = ""): string {
-		const personalContent = existingContent?.split(PERSONAL_CONTENT_START)?.[1] || "";
+	private groupedNoteBookContent(
+		type: 'series' | 'author',
+		book: BookMetadata,
+		existingContent = ''
+	): string {
+		const { fieldsSettings } = this.plugin.settings;
 
-		let bookContent = type === "series" ? SERIES_GROUPED_NOTE_BOOK_TEMPLATE : AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE;
+		const personalContent = existingContent?.split(PERSONAL_CONTENT_START)?.[1] || '';
+
+		let bookContent =
+			type === 'series' ? SERIES_GROUPED_NOTE_BOOK_TEMPLATE : AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE;
 
 		bookContent = bookContent.replace(/{{bookId}}/g, book.hardcoverBookId.toString());
 
-		const sortNumber = book.groupInformationSeries?.seriesPosition || book.groupInformationAuthor?.releaseYear || 0;
+		const sortNumber =
+			book.groupInformationSeries?.seriesPosition || book.groupInformationAuthor?.releaseYear || 0;
 		bookContent = bookContent.replace(/{{sortNumber}}/g, sortNumber.toString());
 
 		// add title
@@ -502,70 +482,79 @@ export class NoteService {
 		// content += `# ${escapedTitle}\n\n`;
 
 		// add book cover if enabled
-		const hasCover =
-			this.plugin.settings.fieldsSettings.cover.enabled &&
-			book[this.plugin.settings.fieldsSettings.cover.propertyName];
+		const hasCover = fieldsSettings.cover.enabled && book[fieldsSettings.cover.propertyName];
 
 		if (hasCover) {
-			const coverProperty =
-				this.plugin.settings.fieldsSettings.cover.propertyName;
+			const coverProperty = fieldsSettings.cover.propertyName;
 			bookContent = bookContent.replace(/{{cover}}/g, book[coverProperty]);
 		}
 
 		// add description if available
 		const hasDescription =
-			this.plugin.settings.fieldsSettings.description.enabled &&
-			book[
-				this.plugin.settings.fieldsSettings.description.propertyName
-			];
+			fieldsSettings.description.enabled && book[fieldsSettings.description.propertyName];
 
-		let blockquoteDescription = ""
+		let blockquoteDescription = '';
 		if (hasDescription) {
-			const descProperty =
-				this.plugin.settings.fieldsSettings.description.propertyName;
+			const descProperty = fieldsSettings.description.propertyName;
 
 			// TODO: configurable
 			blockquoteDescription = toMarkdownBlockquote(book[descProperty]);
 		}
 		// add extra spacing if there is a cover above
-		bookContent = bookContent.replace(/{{description}}/g, blockquoteDescription) // += `${spacing}${book[descProperty]}\n\n`;
+		bookContent = bookContent.replace(/{{description}}/g, blockquoteDescription); // += `${spacing}${book[descProperty]}\n\n`;
 
-		if (
-			this.plugin.settings.fieldsSettings.review.enabled &&
-			book.bodyContent.review
-		) {
-			const formattedReview = this.formatReviewText(
-				book.bodyContent.review
-			);
+		if (fieldsSettings.review.enabled && book.bodyContent.review) {
+			const formattedReview = this.formatReviewText(book.bodyContent.review);
 			let myReview = REVIEW_TEMPLATE;
 			myReview = myReview.replace(/{{review}}/g, formattedReview);
 			bookContent = bookContent.replace(/{{myReview}}/g, myReview);
 		} else {
-			bookContent = bookContent.replace(/{{myReview}}/g, "");
+			bookContent = bookContent.replace(/{{myReview}}/g, '');
 		}
 
-		bookContent = bookContent.replace(/{{hardcoverUrl}}/g, book.url ? `[Hardcover.app](${book.url})` : "");
-		bookContent = bookContent.replace(/{{genres}}/g, this.formatGenres(book.genres).join(", "));
-		bookContent = bookContent.replace(/{{status}}/g, (book.status || []).join(", "));
+		let rating = '';
+		if (fieldsSettings.rating.enabled && book[fieldsSettings.rating.propertyName]) {
+			rating = RATING_TEMPLATE.replace(
+				/{{rating}}/g,
+				book[fieldsSettings.rating.propertyName].toString()
+			);
+		}
+		bookContent = bookContent.replace(/{{rating}}/g, rating);
+
+		bookContent = bookContent.replace(
+			/{{hardcoverUrl}}/g,
+			book.url ? `[Hardcover.app](${book.url})` : ''
+		);
+		bookContent = bookContent.replace(/{{genres}}/g, this.formatGenres(book.genres).join(', '));
+		bookContent = bookContent.replace(/{{status}}/g, (book.status || []).join(', '));
 		bookContent = bookContent.replace(/{{personalContent}}/g, personalContent.trim());
 
 		return bookContent;
 	}
 
-	private createGroupedNoteContent(type: "series"|"author",frontmatter: string, metadata: AuthorMetadata | SeriesMetadata): string {
+	private createGroupedNoteContent(
+		type: 'series' | 'author',
+		frontmatter: string,
+		metadata: AuthorMetadata | SeriesMetadata
+	): string {
 		const bookMetadata = metadata.bodyContent.books || [];
 		let frontmatterStr = this.getFrontmatterString(frontmatter);
-		let content = type === "series" ? SERIES_GROUPED_NOTE_TEMPLATE : AUTHOR_GROUPED_NOTE_TEMPLATE;
-		
+		let content = type === 'series' ? SERIES_GROUPED_NOTE_TEMPLATE : AUTHOR_GROUPED_NOTE_TEMPLATE;
+
 		content = frontmatterStr + content;
 
-		if (type === "series") {
-			if (metadata[this.plugin.settings.fieldsSettings["seriesGenres"].propertyName]) {
-				const genres = this.formatGenres(metadata[this.plugin.settings.fieldsSettings["seriesGenres"].propertyName]);
+		if (type === 'series') {
+			if (metadata[this.plugin.settings.fieldsSettings['seriesGenres'].propertyName]) {
+				const genres = this.formatGenres(
+					metadata[this.plugin.settings.fieldsSettings['seriesGenres'].propertyName]
+				);
 
-				const groupedGenresContent = SERIES_GROUPED_GENRES_TEMPLATE.replace(/{{seriesGenres}}/g, genres.join(", "));
+				const groupedGenresContent = SERIES_GROUPED_GENRES_TEMPLATE.replace(
+					/{{seriesGenres}}/g,
+					genres.join(', ')
+				);
 
-				content = content.replace("{{SERIES_GROUPED_GENRES_TEMPLATE}}", groupedGenresContent);
+				content = content.replace('{{SERIES_GROUPED_GENRES_TEMPLATE}}', groupedGenresContent);
 			}
 		}
 
@@ -575,9 +564,8 @@ export class NoteService {
 			const bookContent = this.groupedNoteBookContent(type, book);
 			booksContents.push(bookContent);
 		}
-		
-		return content.replace(/{{booksContents}}/g, booksContents.join("\n\n"));
 
+		return content.replace(/{{booksContents}}/g, booksContents.join('\n\n'));
 	}
 
 	private createGroupedFrontmatter(metadata: Record<string, any>): string {
@@ -588,23 +576,17 @@ export class NoteService {
 
 		// first add hardcoverBookId as the first property
 		if (frontmatterData.hardcoverBookId !== undefined) {
-			frontmatterEntries.push(
-				`hardcoverBookId: ${frontmatterData.hardcoverBookId}`
-			);
+			frontmatterEntries.push(`hardcoverBookId: ${frontmatterData.hardcoverBookId}`);
 		}
 
 		// for grouped notes add hardcoverAuthorId as the first property
 		if (frontmatterData.hardcoverAuthorId !== undefined) {
-			frontmatterEntries.push(
-				`hardcoverAuthorId: ${frontmatterData.hardcoverAuthorId}`
-			);
+			frontmatterEntries.push(`hardcoverAuthorId: ${frontmatterData.hardcoverAuthorId}`);
 		}
 
 		// for grouped notes add hardcoverSeriesId as the first property
 		if (frontmatterData.hardcoverSeriesId !== undefined) {
-			frontmatterEntries.push(
-				`hardcoverSeriesId: ${frontmatterData.hardcoverSeriesId}`
-			);
+			frontmatterEntries.push(`hardcoverSeriesId: ${frontmatterData.hardcoverSeriesId}`);
 		}
 
 		// add all other properties in the order defined in FIELD_DEFINITIONS
@@ -616,24 +598,26 @@ export class NoteService {
 			// add start/end property names for activity date fields
 			if (field.isActivityDateField) {
 				const activityField = fieldSettings as ActivityDateFieldConfig;
-				propertyNames.push(
-					activityField.startPropertyName,
-					activityField.endPropertyName
-				);
+				propertyNames.push(activityField.startPropertyName, activityField.endPropertyName);
 			}
 
 			return propertyNames;
 		});
 
 		if (this.plugin.settings.dateCreatedPropertyName) {
-			allFieldPropertyNames.push(
-				this.plugin.settings.dateCreatedPropertyName
-			);
+			allFieldPropertyNames.push(this.plugin.settings.dateCreatedPropertyName);
 			frontmatterData[this.plugin.settings.dateCreatedPropertyName] = new Date().toISOString();
 		}
 
 		if (this.plugin.settings.groupAddAliases && frontmatterData.aliases) {
-			allFieldPropertyNames.push('aliases');
+			// temporary hack not to include aliases on series
+			if (frontmatterData.hardcoverAuthorId !== undefined) {
+				// TODO: maybe add formatting option for series. E.g. First Book (Series Name #1)
+				// this should help avoid duplicate aliases.
+				// But need special treatment for light novels, manga, comics, etc...
+				// We don't want e.g. "Konosuba Vol. 1 (Konosuba #1)"
+				allFieldPropertyNames.push('aliases');
+			}
 		}
 
 		// add properties in the defined order
@@ -641,7 +625,7 @@ export class NoteService {
 			if (!frontmatterData.hasOwnProperty(propName)) continue;
 
 			// skip hardcoverBookId as we already added it
-			if (propName === "hardcoverBookId") continue;
+			if (propName === 'hardcoverBookId') continue;
 
 			const value = frontmatterData[propName];
 
@@ -650,34 +634,27 @@ export class NoteService {
 
 			if (Array.isArray(value)) {
 				frontmatterEntries.push(`${propName}: ${JSON.stringify(value)}`);
-			} else if (typeof value === "string") {
-				if (
-					propName ===
-					this.plugin.settings.fieldsSettings.description.propertyName
-				) {
+			} else if (typeof value === 'string') {
+				if (propName === this.plugin.settings.fieldsSettings.description.propertyName) {
 					// remove all \n sequences and replace with spaces to avoid frontmatter issues
-					const cleanValue = value.replace(/\\n/g, " ").trim();
+					const cleanValue = value.replace(/\\n/g, ' ').trim();
 					// remove any multiple spaces that might result
-					const finalValue = cleanValue.replace(/\s+/g, " ");
-					frontmatterEntries.push(
-						`${propName}: "${finalValue.replace(/"/g, '\\"')}"`
-					);
+					const finalValue = cleanValue.replace(/\s+/g, ' ');
+					frontmatterEntries.push(`${propName}: "${finalValue.replace(/"/g, '\\"')}"`);
 				} else {
 					// for other string fields, just escape quotes
-					frontmatterEntries.push(
-						`${propName}: "${value.replace(/"/g, '\\"')}"`
-					);
+					frontmatterEntries.push(`${propName}: "${value.replace(/"/g, '\\"')}"`);
 				}
 			} else {
 				frontmatterEntries.push(`${propName}: ${value}`);
 			}
 		}
 
-		return frontmatterEntries.join("\n");
+		return frontmatterEntries.join('\n');
 	}
 
 	async updateGroupedNote(
-		type: "series"|"author",
+		type: 'series' | 'author',
 		bookMetadata: BookMetadata[],
 		existingFile: TFile
 	): Promise<TFile | null> {
@@ -687,12 +664,12 @@ export class NoteService {
 
 			// const originalPath = existingFile.path;
 			const existingContent = await this.vault.read(existingFile);
-			
+
 			const aliases: string[] = [];
 			const seriesGenres: string[] = [];
 			const booksToStatus: Record<string, number> = {};
 
-			await this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
+			await this.fileManager.processFrontMatter(existingFile, (frontmatter) => {
 				for (const id of frontmatter[fieldsSettings.booksToRead.propertyName] || []) {
 					booksToStatus[id] = 1;
 				}
@@ -706,7 +683,7 @@ export class NoteService {
 					booksToStatus[id] = 5;
 				}
 				aliases.push(...(frontmatter.aliases || []));
-				if (type === "series" && fieldsSettings.seriesGenres.enabled) {
+				if (type === 'series' && fieldsSettings.seriesGenres.enabled) {
 					seriesGenres.push(...(frontmatter[fieldsSettings.seriesGenres.propertyName] || []));
 				}
 			});
@@ -715,12 +692,14 @@ export class NoteService {
 			const startIdx = existingContent.indexOf(GROUPED_CONTENT_START);
 			const endIdx = existingContent.indexOf(CONTENT_DELIMITER);
 			if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-				pluginContent = existingContent.substring(
-					startIdx + GROUPED_CONTENT_START.length,
-					endIdx
-				).trim();
+				pluginContent = existingContent
+					.substring(startIdx + GROUPED_CONTENT_START.length, endIdx)
+					.trim();
 			} else {
-				console.warn("Grouped content start or delimiter not found in existing note.", existingFile.name);
+				console.warn(
+					'Grouped content start or delimiter not found in existing note.',
+					existingFile.name
+				);
 				return null;
 			}
 
@@ -739,22 +718,26 @@ export class NoteService {
 
 			for (const book of bookMetadata) {
 				const stringBookId = book.hardcoverBookId.toString();
-				let bookExistingContent = existingBooks[stringBookId]?.content || "";
+				let bookExistingContent = existingBooks[stringBookId]?.content || '';
 				const newContent = this.groupedNoteBookContent(type, book, bookExistingContent);
-				const sortNumber = book.groupInformationSeries?.seriesPosition || book.groupInformationAuthor?.releaseYear || 0;
-				
+				const sortNumber =
+					book.groupInformationSeries?.seriesPosition ||
+					book.groupInformationAuthor?.releaseYear ||
+					0;
+
 				existingBooks[stringBookId] = {
 					content: newContent,
-					sortNumber: sortNumber
-				}
+					sortNumber: sortNumber,
+				};
 
 				const status = Array.isArray(book.status) ? book.status[0] : book.status;
-				if (typeof status === "string" && status in HARDCOVER_STATUS_MAP_REVERSE) {
-					booksToStatus[stringBookId] = HARDCOVER_STATUS_MAP_REVERSE[status as keyof typeof HARDCOVER_STATUS_MAP_REVERSE];
+				if (typeof status === 'string' && status in HARDCOVER_STATUS_MAP_REVERSE) {
+					booksToStatus[stringBookId] =
+						HARDCOVER_STATUS_MAP_REVERSE[status as keyof typeof HARDCOVER_STATUS_MAP_REVERSE];
 				}
 
 				aliases.push(book.title); // escape quotes for frontmatter
-				if (type === "series" && fieldsSettings.seriesGenres.enabled) {
+				if (type === 'series' && fieldsSettings.seriesGenres.enabled) {
 					seriesGenres.push(...(book.genres || []));
 				}
 			}
@@ -762,31 +745,39 @@ export class NoteService {
 			const newGroupedBookContent = Object.entries(existingBooks)
 				.sort((a, b) => a[1].sortNumber - b[1].sortNumber)
 				.map(([_bookId, bookData]) => {
-					return bookData.content
+					return bookData.content;
 				})
-				.join("\n\n");
+				.join('\n\n');
 
 			// let newContent = existingContent.substring(0, startIdx  + GROUPED_CONTENT_START.length) + newGroupedBookContent + existingContent.substring(endIdx);
-			let newPluginContent = type === "series" ? SERIES_GROUPED_NOTE_TEMPLATE : AUTHOR_GROUPED_NOTE_TEMPLATE;
+			let newPluginContent =
+				type === 'series' ? SERIES_GROUPED_NOTE_TEMPLATE : AUTHOR_GROUPED_NOTE_TEMPLATE;
 
-
-			if (type === "series") {
-				if (type === "series" && fieldsSettings.seriesGenres.enabled) {
+			if (type === 'series') {
+				if (type === 'series' && fieldsSettings.seriesGenres.enabled) {
 					const formattedGenres = this.formatGenres([...new Set(seriesGenres)]);
-					const groupedGenresContent = SERIES_GROUPED_GENRES_TEMPLATE.replace(/{{seriesGenres}}/g, formattedGenres.join(", "));
+					const groupedGenresContent = SERIES_GROUPED_GENRES_TEMPLATE.replace(
+						/{{seriesGenres}}/g,
+						formattedGenres.join(', ')
+					);
 
-					newPluginContent = newPluginContent.replace("{{SERIES_GROUPED_GENRES_TEMPLATE}}", groupedGenresContent);
+					newPluginContent = newPluginContent.replace(
+						'{{SERIES_GROUPED_GENRES_TEMPLATE}}',
+						groupedGenresContent
+					);
 				}
 			}
 
 			newPluginContent = newPluginContent.replace(/{{booksContents}}/g, newGroupedBookContent);
 
-			const newContent = existingContent.substring(0, startIdx) + newPluginContent + existingContent.substring(endIdx);
+			const newContent =
+				existingContent.substring(0, startIdx) +
+				newPluginContent +
+				existingContent.substring(endIdx);
 
 			await this.vault.modify(existingFile, newContent);
 
-			const booksPerStatus: Record<string, string[]> = {
-			};
+			const booksPerStatus: Record<string, string[]> = {};
 			if (fieldsSettings.booksToRead.enabled) {
 				booksPerStatus[fieldsSettings.booksToRead.propertyName] = [];
 			}
@@ -816,35 +807,34 @@ export class NoteService {
 					case 5: // Did Not Finish
 						booksPerStatus[fieldsSettings.booksDNF.propertyName]?.push(bookId);
 						break;
-				}	
+				}
 			}
 
-			await this.fileManager.processFrontMatter(existingFile, (frontmatter) =>{
+			await this.fileManager.processFrontMatter(existingFile, (frontmatter) => {
 				for (const [statusString, ids] of Object.entries(booksPerStatus)) {
 					frontmatter[statusString] = ids;
 				}
-				if (fieldsSettings.bookCount.enabled) { 
+				if (fieldsSettings.bookCount.enabled) {
 					frontmatter[fieldsSettings.bookCount.propertyName] = totalBooks;
 				}
-				if( groupAddAliases && frontmatter.aliases) {
+				if (groupAddAliases && frontmatter.aliases) {
 					frontmatter.aliases = [...new Set(aliases)];
 				}
 				if (dateModifiedPropertyName) {
 					frontmatter[dateModifiedPropertyName] = new Date().toISOString();
 				}
-				if (type === "series" && fieldsSettings.seriesGenres.enabled) {
+				if (type === 'series' && fieldsSettings.seriesGenres.enabled) {
 					frontmatter[fieldsSettings.seriesGenres.propertyName] = [...new Set(seriesGenres)];
 				}
 			});
 
 			return existingFile;
 		} catch (error) {
-			console.error("Error updating note:", error);
+			console.error('Error updating note:', error);
 			return null;
 		}
 	}
 }
-
 
 // {
 //     "hardcoverBookId": 435731,
