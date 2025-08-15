@@ -331,9 +331,8 @@ export class NoteService {
 			const fullPath = targetFolder ? `${targetFolder}/${filename}` : filename;
 
 			// create frontmatter and full note content with delimiter
-			const frontmatter = this.createGroupedFrontmatter(authorMetadata);
-
-			const noteContent = this.createGroupedNoteContent('author', frontmatter, authorMetadata);
+			const frontmatterObj = this.createGroupedFrontmatter(authorMetadata);
+			const noteContent = this.createGroupedNoteContent('author', authorMetadata);
 
 			let file;
 			if (await this.vault.adapter.exists(fullPath)) {
@@ -369,9 +368,8 @@ export class NoteService {
 			const fullPath = targetFolder ? `${targetFolder}/${filename}` : filename;
 
 			// create frontmatter and full note content with delimiter
-			const frontmatter = this.createGroupedFrontmatter(seriesMetadata);
-
-			const noteContent = this.createGroupedNoteContent('series', frontmatter, seriesMetadata);
+			const frontmatterObj = this.createGroupedFrontmatter(seriesMetadata);
+			const noteContent = this.createGroupedNoteContent('series', seriesMetadata);
 
 			let file;
 			if (await this.vault.adapter.exists(fullPath)) {
@@ -384,6 +382,10 @@ export class NoteService {
 				file = await this.vault.create(fullPath, noteContent);
 				console.log(`Created note: ${fullPath}`);
 			}
+
+			await this.fileManager.processFrontMatter(file, (frontmatter) => {
+				Object.assign(frontmatter, frontmatterObj);
+			});
 
 			return file;
 		} catch (error) {
@@ -534,14 +536,11 @@ export class NoteService {
 
 	private createGroupedNoteContent(
 		type: 'series' | 'author',
-		frontmatter: string,
 		metadata: AuthorMetadata | SeriesMetadata
 	): string {
 		const bookMetadata = metadata.bodyContent.books || [];
-		let frontmatterStr = this.getFrontmatterString(frontmatter);
-		let content = type === 'series' ? SERIES_GROUPED_NOTE_TEMPLATE : AUTHOR_GROUPED_NOTE_TEMPLATE;
 
-		content = frontmatterStr + content;
+		let content = type === 'series' ? SERIES_GROUPED_NOTE_TEMPLATE : AUTHOR_GROUPED_NOTE_TEMPLATE;
 
 		if (type === 'series') {
 			if (metadata[this.plugin.settings.fieldsSettings['seriesGenres'].propertyName]) {
@@ -568,39 +567,35 @@ export class NoteService {
 		return content.replace(/{{booksContents}}/g, booksContents.join('\n\n'));
 	}
 
-	private createGroupedFrontmatter(metadata: Record<string, any>): string {
+	private createGroupedFrontmatter(metadata: Record<string, any>): Record<string, any> {
 		// exclude bodyContent from frontmatter
 		const { bodyContent, ...frontmatterData } = metadata;
-
-		const frontmatterEntries: string[] = [];
+		const frontmatterObj: Record<string, any> = {};
 
 		// first add hardcoverBookId as the first property
 		if (frontmatterData.hardcoverBookId !== undefined) {
-			frontmatterEntries.push(`hardcoverBookId: ${frontmatterData.hardcoverBookId}`);
+			frontmatterObj.hardcoverBookId = frontmatterData.hardcoverBookId;
 		}
 
 		// for grouped notes add hardcoverAuthorId as the first property
 		if (frontmatterData.hardcoverAuthorId !== undefined) {
-			frontmatterEntries.push(`hardcoverAuthorId: ${frontmatterData.hardcoverAuthorId}`);
+			frontmatterObj.hardcoverAuthorId = frontmatterData.hardcoverAuthorId;
 		}
 
 		// for grouped notes add hardcoverSeriesId as the first property
 		if (frontmatterData.hardcoverSeriesId !== undefined) {
-			frontmatterEntries.push(`hardcoverSeriesId: ${frontmatterData.hardcoverSeriesId}`);
+			frontmatterObj.hardcoverSeriesId = frontmatterData.hardcoverSeriesId;
 		}
 
 		// add all other properties in the order defined in FIELD_DEFINITIONS
 		const allFieldPropertyNames = FIELD_DEFINITIONS.flatMap((field) => {
 			const fieldSettings = this.plugin.settings.fieldsSettings[field.key];
-
 			const propertyNames = [fieldSettings.propertyName];
-
 			// add start/end property names for activity date fields
 			if (field.isActivityDateField) {
 				const activityField = fieldSettings as ActivityDateFieldConfig;
 				propertyNames.push(activityField.startPropertyName, activityField.endPropertyName);
 			}
-
 			return propertyNames;
 		});
 
@@ -612,10 +607,6 @@ export class NoteService {
 		if (this.plugin.settings.groupAddAliases && frontmatterData.aliases) {
 			// temporary hack not to include aliases on series
 			if (frontmatterData.hardcoverAuthorId !== undefined) {
-				// TODO: maybe add formatting option for series. E.g. First Book (Series Name #1)
-				// this should help avoid duplicate aliases.
-				// But need special treatment for light novels, manga, comics, etc...
-				// We don't want e.g. "Konosuba Vol. 1 (Konosuba #1)"
 				allFieldPropertyNames.push('aliases');
 			}
 		}
@@ -623,34 +614,26 @@ export class NoteService {
 		// add properties in the defined order
 		for (const propName of allFieldPropertyNames) {
 			if (!frontmatterData.hasOwnProperty(propName)) continue;
-
-			// skip hardcoverBookId as we already added it
 			if (propName === 'hardcoverBookId') continue;
-
 			const value = frontmatterData[propName];
-
-			// skip undefined/null values
 			if (value === undefined || value === null) continue;
-
-			if (Array.isArray(value)) {
-				frontmatterEntries.push(`${propName}: ${JSON.stringify(value)}`);
-			} else if (typeof value === 'string') {
-				if (propName === this.plugin.settings.fieldsSettings.description.propertyName) {
-					// remove all \n sequences and replace with spaces to avoid frontmatter issues
-					const cleanValue = value.replace(/\\n/g, ' ').trim();
-					// remove any multiple spaces that might result
-					const finalValue = cleanValue.replace(/\s+/g, ' ');
-					frontmatterEntries.push(`${propName}: "${finalValue.replace(/"/g, '\\"')}"`);
-				} else {
-					// for other string fields, just escape quotes
-					frontmatterEntries.push(`${propName}: "${value.replace(/"/g, '\\"')}"`);
-				}
-			} else {
-				frontmatterEntries.push(`${propName}: ${value}`);
-			}
+			// if (Array.isArray(value)) {
+			// 	frontmatterObj[propName] = value;
+			// } else if (typeof value === 'string') {
+			// 	if (propName === this.plugin.settings.fieldsSettings.description.propertyName) {
+			// 		// remove all \n sequences and replace with spaces to avoid frontmatter issues
+			// 		const cleanValue = value.replace(/\n/g, ' ').trim();
+			// 		const finalValue = cleanValue.replace(/\s+/g, ' ');
+			// 		frontmatterObj[propName] = finalValue.replace(/"/g, '\"');
+			// 	} else {
+			// 		frontmatterObj[propName] = value.replace(/"/g, '\"');
+			// 	}
+			// } else {
+			frontmatterObj[propName] = value;
+			// }
 		}
 
-		return frontmatterEntries.join('\n');
+		return frontmatterObj;
 	}
 
 	async updateGroupedNote(
