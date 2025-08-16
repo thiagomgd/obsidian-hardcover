@@ -24,11 +24,6 @@ export class GroupSyncService {
 		const authorMap = new Map<number, { name: string; books: BookMetadata[] }>();
 
 		for (const book of books) {
-			// skip to-read books
-			if (book.status_id === 1) {
-				continue;
-			}
-
 			if (this.isSeries(book)) {
 				const seriesName = book.groupInformationSeries?.seriesName || 'Unknown Series';
 				const seriesId = book.groupInformationSeries?.seriesId || -1;
