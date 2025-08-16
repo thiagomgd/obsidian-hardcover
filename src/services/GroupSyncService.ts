@@ -1,16 +1,7 @@
-import { Notice } from "obsidian";
-import { HardcoverAPI } from "src/api/HardcoverAPI";
-import ObsidianHardcover from "src/main";
-import { AuthorMetadata, BookMetadata, HardcoverUserBook, SeriesMetadata } from "src/types";
-
-/*
-TODDO: 
-- fetch series information
-- create author notes
-- create series notes
-- update author notes
-- update series notes
-*/
+import { Notice } from 'obsidian';
+import { HardcoverAPI } from 'src/api/HardcoverAPI';
+import ObsidianHardcover from 'src/main';
+import { AuthorMetadata, BookMetadata, HardcoverUserBook, SeriesMetadata } from 'src/types';
 
 export class GroupSyncService {
 	private plugin: ObsidianHardcover;
@@ -25,36 +16,36 @@ export class GroupSyncService {
 		return !!book.groupInformationSeries?.seriesName;
 	}
 
-	private groupBooks(books: BookMetadata[]): 
-	{ series: Map<number,{name:string, books: BookMetadata[]}>; 
-		authors: Map<number,{name:string, books: BookMetadata[]}> } 
-	{
-		const seriesMap = new Map<number,{name:string, books: BookMetadata[]}>();
-		const authorMap = new Map<number,{name:string, books: BookMetadata[]}>();
+	private groupBooks(books: BookMetadata[]): {
+		series: Map<number, { name: string; books: BookMetadata[] }>;
+		authors: Map<number, { name: string; books: BookMetadata[] }>;
+	} {
+		const seriesMap = new Map<number, { name: string; books: BookMetadata[] }>();
+		const authorMap = new Map<number, { name: string; books: BookMetadata[] }>();
 
 		for (const book of books) {
 			// skip to-read books
-			if (book.status_id === 1) { 
+			if (book.status_id === 1) {
 				continue;
 			}
 
 			if (this.isSeries(book)) {
-				const seriesName = book.groupInformationSeries?.seriesName || "Unknown Series";
+				const seriesName = book.groupInformationSeries?.seriesName || 'Unknown Series';
 				const seriesId = book.groupInformationSeries?.seriesId || -1;
 				if (!seriesMap.has(seriesId)) {
-					seriesMap.set(seriesId, {name: seriesName, books: []});
+					seriesMap.set(seriesId, { name: seriesName, books: [] });
 				}
 				seriesMap.get(seriesId)?.books?.push(book);
 			} else {
 				const authorId = book.groupInformationAuthor?.authorId || -1;
-				const authorName = book.groupInformationAuthor?.authorName || "Unknown Author";
+				const authorName = book.groupInformationAuthor?.authorName || 'Unknown Author';
 				if (!authorMap.has(authorId)) {
-					authorMap.set(authorId, {name: authorName, books:[]});
+					authorMap.set(authorId, { name: authorName, books: [] });
 				}
 				authorMap.get(authorId)?.books?.push(book);
 			}
-		}	
-		
+		}
+
 		// sort series
 		seriesMap.forEach((series, _seriesId) => {
 			series.books.sort((a, b) => {
@@ -67,10 +58,12 @@ export class GroupSyncService {
 		// sort author books
 		authorMap.forEach((author, _authorId) => {
 			author.books.sort((a, b) => {
-				return (a.groupInformationAuthor?.releaseYear || 0) - (b.groupInformationAuthor?.releaseYear || 0);
+				return (
+					(a.groupInformationAuthor?.releaseYear || 0) -
+					(b.groupInformationAuthor?.releaseYear || 0)
+				);
 			});
 		});
-
 
 		return {
 			series: seriesMap,
@@ -82,8 +75,7 @@ export class GroupSyncService {
 		if (!timestamp) return true; // empty timestamp is valid, for full sync
 
 		// ISO 8601 format regex
-		const isoDateRegex =
-			/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(([+-]\d{2}:\d{2})|Z)?$/;
+		const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(([+-]\d{2}:\d{2})|Z)?$/;
 		return isoDateRegex.test(timestamp);
 	}
 
@@ -93,7 +85,7 @@ export class GroupSyncService {
 
 		if (this.plugin.fileUtils.isRootOrEmpty(targetFolder)) {
 			new Notice(
-				"Please specify a subfolder for your Hardcover books. Using the vault root is not supported."
+				'Please specify a subfolder for your Hardcover books. Using the vault root is not supported.'
 			);
 			return;
 		}
@@ -125,38 +117,34 @@ export class GroupSyncService {
 
 			// show debug notice if in debug mode
 			if (isDebugMode) {
-				console.log(
-					`Debug sync: Processing ${booksToProcess}/${currentBooksCount} books`
-				);
+				console.log(`Debug sync: Processing ${booksToProcess}/${currentBooksCount} books`);
 				new Notice(`DEBUG MODE: Sync limited to ${booksToProcess} books`);
 			}
 
 			if (booksToProcess > 0) {
 				await this.syncBooks(userId, booksToProcess, isDebugMode);
 			} else {
-				new Notice("No books found in your Hardcover library.");
+				new Notice('No books found in your Hardcover library.');
 			}
 		} catch (error) {
-			console.error("Sync failed:", error);
+			console.error('Sync failed:', error);
 
-			let errorMessage = "Sync failed.";
+			let errorMessage = 'Sync failed.';
 
-			if (error.message.includes("Authentication failed")) {
+			if (error.message.includes('Authentication failed')) {
 				errorMessage = error.message;
 			} else if (
-				error.message.includes("Unable to connect") ||
-				error.message.includes("timed out") ||
-				error.message.includes("ENOTFOUND") ||
-				error.message.includes("ETIMEDOUT")
+				error.message.includes('Unable to connect') ||
+				error.message.includes('timed out') ||
+				error.message.includes('ENOTFOUND') ||
+				error.message.includes('ETIMEDOUT')
 			) {
 				errorMessage =
-					"Could not connect to Hardcover API. Please check your internet connection and try again.";
-			} else if (error.message.includes("Rate limit")) {
-				errorMessage =
-					"Rate limit reached. Please wait a few minutes and try again.";
+					'Could not connect to Hardcover API. Please check your internet connection and try again.';
+			} else if (error.message.includes('Rate limit')) {
+				errorMessage = 'Rate limit reached. Please wait a few minutes and try again.';
 			} else {
-				errorMessage =
-					"Sync failed. Check the developer console for more details (Ctrl+Shift+I).";
+				errorMessage = 'Sync failed. Check the developer console for more details (Ctrl+Shift+I).';
 			}
 
 			new Notice(errorMessage, 10000); // show for 10 seconds
@@ -170,7 +158,7 @@ export class GroupSyncService {
 
 		const user = await this.hardcoverAPI.fetchUserId();
 		if (!user?.id) {
-			throw new Error("No user ID found in response");
+			throw new Error('No user ID found in response');
 		}
 
 		// save to settings
@@ -180,15 +168,11 @@ export class GroupSyncService {
 		return user.id;
 	}
 
-	private async syncBooks(
-		userId: number,
-		totalBooks: number,
-		debugMode: boolean = false
-	) {
+	private async syncBooks(userId: number, totalBooks: number, debugMode: boolean = false) {
 		const { lastSyncTimestamp } = this.plugin.settings;
 		const { metadataService, noteService } = this.plugin;
 
-		const notice = new Notice("Syncing Hardcover library...", 0);
+		const notice = new Notice('Syncing Hardcover library...', 0);
 
 		try {
 			const totalTasks = totalBooks * 2; // each book counts twice: one for fetch, one for the note creation
@@ -200,7 +184,7 @@ export class GroupSyncService {
 			};
 
 			// Task 1: fetch data from API
-			updateProgress("Fetching books");
+			updateProgress('Fetching books');
 
 			const books = await this.hardcoverAPI.fetchEntireLibrary({
 				userId,
@@ -208,7 +192,7 @@ export class GroupSyncService {
 				updatedAfter: lastSyncTimestamp,
 				onProgress(current) {
 					completedTasks = current;
-					updateProgress("Fetching books");
+					updateProgress('Fetching books');
 				},
 			});
 
@@ -220,23 +204,23 @@ export class GroupSyncService {
 			let failedBooksCount = 0;
 			let failedBooks: Array<{ id: number; title: string; error: string }> = [];
 
-			const booksMetadata = books.map((book) =>
-				metadataService.buildMetadata(book, true)
-			);
+			const booksMetadata = books.map((book) => metadataService.buildMetadata(book, true));
 			const groupedBooks = this.groupBooks(booksMetadata);
 
 			// Task 2: create notes
 
-			updateProgress("Creating notes for series");
+			updateProgress('Creating notes for series');
 			for (const [seriesId, seriesObj] of groupedBooks.series.entries()) {
 				try {
-					const metadata = metadataService.buildGroupedMetadata('series', seriesId, seriesObj.name, seriesObj.books);
+					const metadata = metadataService.buildGroupedMetadata(
+						'series',
+						seriesId,
+						seriesObj.name,
+						seriesObj.books
+					);
 
 					// check if note already exists by checking author name
-					const existingNote = await noteService.findNoteByHCId(
-						"series",
-						seriesId
-					);
+					const existingNote = await noteService.findNoteByHCId('series', seriesId);
 
 					if (existingNote) {
 						// update existing note
@@ -248,7 +232,7 @@ export class GroupSyncService {
 						createdNotesCount++;
 					}
 				} catch (error) {
-					console.error("Error processing series:", error);
+					console.error('Error processing series:', error);
 
 					failedBooks.push({
 						id: seriesId,
@@ -260,19 +244,21 @@ export class GroupSyncService {
 				}
 
 				completedTasks += 1; // increment for each series processed
-				updateProgress("Creating notes for series");
+				updateProgress('Creating notes for series');
 			}
 
-			updateProgress("Creating notes for authors");
+			updateProgress('Creating notes for authors');
 			for (const [authorId, authorObj] of groupedBooks.authors.entries()) {
 				try {
-					const metadata = metadataService.buildGroupedMetadata('author', authorId, authorObj.name, authorObj.books);
+					const metadata = metadataService.buildGroupedMetadata(
+						'author',
+						authorId,
+						authorObj.name,
+						authorObj.books
+					);
 
 					// check if note already exists by checking author name
-					const existingNote = await noteService.findNoteByHCId(
-						"author",
-						authorId
-					);
+					const existingNote = await noteService.findNoteByHCId('author', authorId);
 
 					if (existingNote) {
 						// update existing note
@@ -284,7 +270,7 @@ export class GroupSyncService {
 						createdNotesCount++;
 					}
 				} catch (error) {
-					console.error("Error processing author:", error);
+					console.error('Error processing author:', error);
 
 					failedBooks.push({
 						id: authorId,
@@ -296,7 +282,7 @@ export class GroupSyncService {
 				}
 
 				completedTasks += 1; // increment for each author processed
-				updateProgress("Creating notes for authors");
+				updateProgress('Creating notes for authors');
 			}
 
 			// only update the timestamp if ALL books were successfully processed
@@ -314,19 +300,16 @@ export class GroupSyncService {
 			if (failedBooksCount > 0) {
 				message += ` (${failedBooksCount} books failed to process)`;
 
-				console.warn(
-					`${failedBooksCount} books failed to process:`,
-					failedBooks
-				);
+				console.warn(`${failedBooksCount} books failed to process:`, failedBooks);
 
-				console.log("Last sync timestamp not updated due to book failures");
+				console.log('Last sync timestamp not updated due to book failures');
 			}
 
 			new Notice(message);
 		} catch (error) {
 			notice.hide();
-			console.error("Error syncing library:", error);
-			new Notice("Error syncing Hardcover library. Check console for details.");
+			console.error('Error syncing library:', error);
+			new Notice('Error syncing Hardcover library. Check console for details.');
 			throw error;
 		}
 	}

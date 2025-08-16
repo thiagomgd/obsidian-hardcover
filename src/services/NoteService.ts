@@ -395,7 +395,6 @@ export class NoteService {
 	}
 
 	async findNoteByHCId(type: string, id: number): Promise<TFile | null> {
-		// TODO: allow multiple folders, so user can separate books, light novels, manga, comics, etc...
 		const idProperty = type === 'series' ? 'hardcoverSeriesId' : 'hardcoverAuthorId';
 		try {
 			const folderPaths =
