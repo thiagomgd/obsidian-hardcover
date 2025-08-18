@@ -87,6 +87,7 @@ export interface HardcoverUserBooksReads {
 export interface HardcoverBookSeries {
 	series: {
 		name: string;
+		id: number;
 	};
 	position: number;
 }

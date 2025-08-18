@@ -26,6 +26,14 @@ export class FileUtils {
 			filename = filename.replace(/\${title}/g, metadata.title);
 		}
 
+		if (metadata.authorName) {
+			filename = filename.replace(/\${authorName}/g, metadata.authorName);
+		}
+
+		if (metadata.seriesName) {
+			filename = filename.replace(/\${seriesName}/g, metadata.seriesName);
+		}
+
 		if (metadata.authors && Array.isArray(metadata.authors)) {
 			const authorsString = metadata.authors.join(", ");
 			filename = filename.replace(/\${authors}/g, authorsString);

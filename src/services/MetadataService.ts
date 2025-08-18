@@ -1,10 +1,13 @@
 import { HARDCOVER_BOOKS_ROUTE, HARDCOVER_URL } from "src/config/constants";
+import { HARDCOVER_STATUS_MAP_REVERSE } from "src/config/statusMapping";
 import {
+	AuthorMetadata,
 	BookMetadata,
 	HardcoverBookSeries,
 	HardcoverUserBook,
 	HardcoverUserBooksReads,
 	PluginSettings,
+	SeriesMetadata,
 } from "src/types";
 
 export class MetadataService {
@@ -18,7 +21,7 @@ export class MetadataService {
 		this.settings = settings;
 	}
 
-	buildMetadata(userBook: HardcoverUserBook): BookMetadata {
+	buildMetadata(userBook: HardcoverUserBook, includeGroupData = false): BookMetadata {
 		const { fieldsSettings, dataSourcePreferences } = this.settings;
 		const metadata: BookMetadata = {
 			// always include the Hardcover book id
@@ -77,20 +80,29 @@ export class MetadataService {
 		// add authors
 		if (fieldsSettings.authors.enabled) {
 			let authors: string[] = [];
+			let mainAuthor = null;
 			if (
 				dataSourcePreferences.authorsSource === "book" &&
 				book.cached_contributors
 			) {
 				authors = this.extractAuthors(book.cached_contributors);
+				mainAuthor = this.extractFirstAuthorWithId(book.cached_contributors);
 			} else if (
 				dataSourcePreferences.authorsSource === "edition" &&
 				edition.cached_contributors
 			) {
 				authors = this.extractAuthors(edition.cached_contributors);
+				mainAuthor = this.extractFirstAuthorWithId(book.cached_contributors);
 			}
 
 			if (authors.length) {
 				metadata[fieldsSettings.authors.propertyName] = authors;
+				if (includeGroupData && mainAuthor) {
+					metadata.groupInformationAuthor = {
+						authorName: mainAuthor.name,
+						authorId: mainAuthor.id,
+					};
+				}
 			}
 		}
 
@@ -126,6 +138,19 @@ export class MetadataService {
 		) {
 			metadata[fieldsSettings.releaseDate.propertyName] =
 				currentReleaseDateSource.release_date;
+
+			// also extract release year for grouping by author/series
+			if (includeGroupData && currentReleaseDateSource.release_date) {
+				const releaseYear = new Date(
+					currentReleaseDateSource.release_date
+				).getFullYear();
+				if (!isNaN(releaseYear)) {
+					metadata.groupInformationAuthor = {
+						...(metadata.groupInformationAuthor || {}),
+						releaseYear: releaseYear,
+					};
+				}
+			}
 		}
 
 		// add description
@@ -150,6 +175,17 @@ export class MetadataService {
 			const seriesArray = this.extractSeriesInfo(book.book_series);
 			if (seriesArray.length > 0) {
 				metadata[fieldsSettings.series.propertyName] = seriesArray;
+			}
+			if (includeGroupData && book.book_series.length > 0) {
+				// for grouping, just take the first series
+				const firstSeries: HardcoverBookSeries = book.book_series[0];
+				if (firstSeries.series) {
+					metadata.groupInformationSeries = {
+						seriesName: firstSeries.series.name,
+						seriesId: firstSeries.series.id,
+						seriesPosition: firstSeries.position,
+					};
+				}
 			}
 		}
 
@@ -208,6 +244,103 @@ export class MetadataService {
 		return metadata;
 	}
 
+	public buildGroupedMetadata(
+		type: "author" | "series",
+		id: number,
+		name: string,
+		books: BookMetadata[]
+	): AuthorMetadata | SeriesMetadata{
+		let metadata: AuthorMetadata | SeriesMetadata;
+		// create arrays for each status if enabled in settings
+		const { fieldsSettings } = this.settings;
+
+		if (type === "author") {
+			metadata = {
+				hardcoverAuthorId: id,
+				authorName: name,
+				bodyContent: {},
+			};
+		} else {
+			 metadata = {
+				hardcoverSeriesId: id,
+				seriesName: name,
+				bodyContent: {},
+			};
+		}
+
+		if (books.length === 0) {
+			return metadata; // no books, return empty metadata
+		}
+
+		if (this.settings.groupAddAliases) {
+			metadata.aliases = [];
+		}
+		if (fieldsSettings.seriesGenres.enabled && type === "series") {
+			metadata[fieldsSettings.seriesGenres.propertyName] = [];
+		}
+		metadata.bodyContent.name = name;
+		metadata.bodyContent.books = [];
+
+
+		
+		if (fieldsSettings.bookCount.enabled) {
+			metadata[fieldsSettings.bookCount.propertyName] = 0;
+		}
+		if (fieldsSettings.booksToRead.enabled) {
+			metadata[fieldsSettings.booksToRead.propertyName] = [];
+		}
+		if (fieldsSettings.booksReading.enabled) {
+			metadata[fieldsSettings.booksReading.propertyName] = [];
+		}
+		if (fieldsSettings.booksRead.enabled) {
+			metadata[fieldsSettings.booksRead.propertyName] = [];
+		}
+		if (fieldsSettings.booksDNF.enabled) {
+			metadata[fieldsSettings.booksDNF.propertyName] = [];
+		}
+
+		for (const book of books) {
+			metadata.bodyContent.books.push(book);
+			// "1": "Want to Read",
+			// "2": "Currently Reading",
+			// "3": "Read",
+			// "5": "Did Not Finish"
+			// TODO: fix mess
+			const statusKey = Array.isArray(book.status) ? book.status[0] as keyof typeof HARDCOVER_STATUS_MAP_REVERSE : book.status as keyof typeof HARDCOVER_STATUS_MAP_REVERSE;
+			const statusId: number = HARDCOVER_STATUS_MAP_REVERSE[statusKey];
+
+			const strId = book.hardcoverBookId.toString();
+			switch (statusId) {	
+				case 1: // Want to Read
+					metadata[fieldsSettings.booksToRead.propertyName]?.push(strId);
+					break;
+				case 2: // Currently Reading
+					metadata[fieldsSettings.booksReading.propertyName]?.push(strId);
+					break;
+				case 3: // Read
+					metadata[fieldsSettings.booksRead.propertyName]?.push(strId);
+					break;
+				case 5: // Did Not Finish
+					metadata[fieldsSettings.booksDNF.propertyName]?.push(strId);
+					break;
+			}
+			fieldsSettings.bookCount.enabled && metadata[fieldsSettings.bookCount.propertyName]++;
+			if (this.settings.groupAddAliases && book.bodyContent.title) {
+				// add book title as alias
+				metadata.aliases?.push(book.bodyContent.title);
+			}
+
+			metadata[fieldsSettings.seriesGenres.propertyName]?.push(...(book[fieldsSettings.genres.propertyName] || []));
+		}
+		
+		if (metadata[fieldsSettings.seriesGenres.propertyName]) {
+			// remove duplicates and sort
+			metadata[fieldsSettings.seriesGenres.propertyName] = Array.from(new Set(metadata[fieldsSettings.seriesGenres.propertyName])).sort();
+		}
+
+		return metadata;
+	}
+
 	private mapStatus(statusId: number): string[] {
 		const statusText =
 			this.settings.statusMapping[statusId] || `Unknown (${statusId})`;
@@ -233,6 +366,26 @@ export class MetadataService {
 			.slice(0, 5); // limit to 5 authors
 
 		return authors;
+	}
+
+	private extractFirstAuthorWithId(contributorsData: Record<any, any>[]): { name: string; id: number } | null {
+		if (!contributorsData || !Array.isArray(contributorsData)) {
+			return null;
+		}
+
+		// filter for authors (null/empty contribution or explicitly "Author")
+		const authors = contributorsData
+			.filter(
+				(item) =>
+					!item.contribution ||
+					item.contribution === "" ||
+					item.contribution === "Author"
+			)
+			// for now we'll keep authors without name
+			// .filter((name) => !!name) // remove any undefined/null names
+			.map((item) => {return {name: item.author?.name, id: item.author?.id}})
+
+		return authors[0];
 	}
 
 	private extractContributors(

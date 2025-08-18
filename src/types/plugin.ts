@@ -22,10 +22,20 @@ export interface PluginSettings {
 	};
 
 	targetFolder: string;
+	groupAuthorTargetFolder: string;
+	groupSeriesTargetFolder: string;
 	filenameTemplate: string;
+	groupAuthorFilenameTemplate: string;
+	groupSeriesFilenameTemplate: string;
+	groupAddAliases: boolean; // whether to add aliases to grouped notes based on author/series names
+	dateCreatedPropertyName?: string; // optional property name for date created in frontmatter
+	dateModifiedPropertyName?: string; // optional property name for date modified in frontmatter
+	genresAsTags?: string; // format for genres as tags (Only in note body) - empty means no formatting.
+	groupSeriesAllFolders?: string; // semicolon separated list of folders to search for series notes, used in findNoteByHCId
+	groupAuthorAllFolders?: string;
 }
 
-type DataSource = "book" | "edition";
+type DataSource = 'book' | 'edition';
 export interface FieldConfig {
 	enabled: boolean;
 	propertyName: string;
@@ -64,6 +74,14 @@ export interface FieldsSettings {
 	totalReads: FieldConfig;
 
 	readYears: FieldConfig;
+
+	// grouped note specific fields
+	bookCount: FieldConfig;
+	booksToRead: FieldConfig;
+	booksReading: FieldConfig;
+	booksRead: FieldConfig;
+	booksDNF: FieldConfig;
+	seriesGenres: FieldConfig;
 }
 
 export interface FieldDefinition {
@@ -81,6 +99,42 @@ export interface BookMetadata {
 		coverUrl?: string;
 		review?: string;
 	};
+	groupInformationAuthor?: {
+		authorName?: string;
+		authorId?: number;
+		releaseYear?: number;
+	};
+	groupInformationSeries?: {
+		seriesName?: string;
+		seriesId?: number;
+		seriesPosition?: number;
+	};
 	// allow for dynamic properties based on user custom property names
 	[key: string]: any;
+}
+
+export interface GroupedCommonMetadata {
+	bookCount?: number;
+	bookCountShelves?: number;
+	bookCountRead?: number;
+	bookCountToRead?: number;
+	bodyContent: {
+		name?: string;
+		authorUrl?: string;
+		// list of books by this author, sorted by release date ascending
+		books?: BookMetadata[];
+	};
+	aliases?: string[]; // optional aliases for the series
+	// allow for dynamic properties based on user custom property names
+	[key: string]: any;
+}
+
+export interface AuthorMetadata extends GroupedCommonMetadata {
+	hardcoverAuthorId: number;
+	authorName: string;
+}
+
+export interface SeriesMetadata extends GroupedCommonMetadata {
+	hardcoverSeriesId: number;
+	seriesName: string;
 }

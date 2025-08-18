@@ -3,6 +3,7 @@ import { HardcoverAPI } from "src/api/HardcoverAPI";
 import SettingsTab from "./views/SettingsTab";
 import { PluginSettings } from "./types";
 import { SyncService } from "./services/SyncService";
+import { GroupSyncService } from "./services/GroupSyncService";
 import { MetadataService } from "./services/MetadataService";
 import { FileUtils } from "./utils/FileUtils";
 import { NoteService } from "./services/NoteService";
@@ -17,6 +18,7 @@ export default class ObsidianHardcover extends Plugin {
 	noteService: NoteService;
 	fileUtils: FileUtils;
 	syncService: SyncService;
+	groupSyncService: GroupSyncService;
 
 	async onload() {
 		if (IS_DEV) {
@@ -29,10 +31,11 @@ export default class ObsidianHardcover extends Plugin {
 		this.hardcoverAPI = new HardcoverAPI(this.settings);
 		this.fileUtils = new FileUtils();
 		this.metadataService = new MetadataService(this.settings);
-		this.noteService = new NoteService(this.app.vault, this.fileUtils, this);
+		this.noteService = new NoteService(this.app.vault, this.app.fileManager, this.app.metadataCache, this.fileUtils, this);
 
 		// Instantiate main service
 		this.syncService = new SyncService(this);
+		this.groupSyncService = new GroupSyncService(this);
 
 		// Add command palette command
 		this.addCommand({
@@ -40,6 +43,14 @@ export default class ObsidianHardcover extends Plugin {
 			name: "Sync Hardcover library",
 			callback: () => {
 				this.triggerSync();
+			},
+		});
+
+		this.addCommand({
+			id: "group-sync-hardcover-library",
+			name: "Group Sync Hardcover library",
+			callback: () => {
+				this.triggerGroupSync();
 			},
 		});
 
@@ -134,6 +145,23 @@ export default class ObsidianHardcover extends Plugin {
 			await this.syncService.startSync();
 		} catch (error) {
 			console.error("Sync failed:", error);
+		}
+	}
+
+	private async triggerGroupSync(): Promise<void> {
+		const validation = this.validateSyncConstraints();
+
+		if (!validation.isValid) {
+			new Notice(validation.errorMessage || "Sync validation failed");
+			return;
+		}
+
+		try {
+			console.log("Starting group sync process...");
+			await this.groupSyncService.startSync();
+			// await this.groupSyncService.startSync({debugLimit:50});
+		} catch (error) {
+			console.error("Group Sync failed:", error);
 		}
 	}
 }
