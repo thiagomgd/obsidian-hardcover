@@ -2,6 +2,8 @@ import { FileManager, MetadataCache, TFile, Vault } from 'obsidian';
 import {
 	AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE,
 	AUTHOR_GROUPED_NOTE_TEMPLATE,
+	BOOK_END,
+	BOOK_START,
 	CONTENT_DELIMITER,
 	GROUPED_CONTENT_START,
 	GROUPED_GENRES_END,
@@ -465,8 +467,6 @@ export class NoteService {
 	): string {
 		const { fieldsSettings } = this.plugin.settings;
 
-		const personalContent = existingContent?.split(PERSONAL_CONTENT_START)?.[1] || '';
-
 		let bookContent =
 			type === 'series' ? SERIES_GROUPED_NOTE_BOOK_TEMPLATE : AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE;
 
@@ -475,6 +475,17 @@ export class NoteService {
 		const sortNumber =
 			book.groupInformationSeries?.seriesPosition || book.groupInformationAuthor?.releaseYear || 0;
 		bookContent = bookContent.replace(/{{sortNumber}}/g, sortNumber.toString());
+
+		const personalContent =
+			existingContent
+				?.split(PERSONAL_CONTENT_START)?.[1]
+				.replace(
+					BOOK_END.replace('{{bookId}}', book.hardcoverBookId.toString()).replace(
+						'{{sortNumber}}',
+						sortNumber.toString()
+					),
+					''
+				) || '';
 
 		// add title
 		const title = this.getBookTitle(book);
@@ -691,7 +702,15 @@ export class NoteService {
 			while ((match = bookRegex.exec(pluginContent)) !== null) {
 				const bookId = match[1];
 				const sortNumber = Number(match[2]);
-				const content = match[3].trim();
+				const content =
+					BOOK_START.replace('{{bookId}}', bookId).replace(
+						'{{sortNumber}}',
+						sortNumber.toString()
+					) +
+					match[3] +
+					BOOK_END.replace('{{bookId}}', bookId).replace('{{sortNumber}}', sortNumber.toString()) +
+					'\n';
+
 				existingBooks[bookId] = {
 					sortNumber,
 					content,
@@ -755,7 +774,7 @@ export class NoteService {
 			const newContent =
 				existingContent.substring(0, startIdx) +
 				newPluginContent +
-				existingContent.substring(endIdx);
+				existingContent.substring(endIdx + CONTENT_DELIMITER.length);
 
 			await this.vault.modify(existingFile, newContent);
 

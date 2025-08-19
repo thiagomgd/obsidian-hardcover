@@ -23,10 +23,13 @@ export const SERIES_GROUPED_NOTE_TEMPLATE = `%%ohp-start%%
 export const PERSONAL_CONTENT_START = '%%ohp-book-personal%%';
 // sortNumber is Year for author, Position for series
 // this is necessary so we can update the notes and insert new books in the right order
-export const AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE = `%%ohp-book-start-{{bookId}}-{{sortNumber}}%%
+export const BOOK_START = '%%ohp-book-start-{{bookId}}-{{sortNumber}}%%';
+export const BOOK_END = '%%ohp-book-end-{{bookId}}-{{sortNumber}}%%';
+export const AUTHOR_GROUPED_NOTE_BOOK_TEMPLATE = `${BOOK_START}
 ## {{title}}
 
-Status: {{status}}
+Status: {{status}} 
+{{rating}}
 
 > [!summary]+
 > > [!figure-right-s] ![cover]({{cover}})
@@ -40,13 +43,14 @@ Genres: {{genres}}
 {{myReview}}
 ${PERSONAL_CONTENT_START}
 {{personalContent}}
-%%ohp-book-end-{{bookId}}-{{sortNumber}}%%
+${BOOK_END}
 `;
 
-export const SERIES_GROUPED_NOTE_BOOK_TEMPLATE = `%%ohp-book-start-{{bookId}}-{{sortNumber}}%%
+export const SERIES_GROUPED_NOTE_BOOK_TEMPLATE = `${BOOK_START}
 ## {{title}}
 
-Status: {{status}} {{rating}}
+Status: {{status}} 
+{{rating}}
 
 > [!summary]+
 > > [!figure-right-s] ![cover]({{cover}})
@@ -56,9 +60,9 @@ Status: {{status}} {{rating}}
 {{hardcoverUrl}}
 
 {{myReview}}
-%%ohp-book-personal%%
+${PERSONAL_CONTENT_START}
 {{personalContent}}
-%%ohp-book-end-{{bookId}}-{{sortNumber}}%%
+${BOOK_END}
 `;
 
 export const REVIEW_TEMPLATE = `
